@@ -441,7 +441,7 @@ public class HybridPathService {
     }
 
 
-    public List<List<Map<String, Object>>> getShortest(String point1, String point2, String route) {
+    public List<List<Double>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points,String route) {
         final double startTime = System.nanoTime();
         String proximalPoint = getProximalPoint(point1, point2, route);
         if ("".equals(proximalPoint)) {
@@ -454,93 +454,44 @@ public class HybridPathService {
         }
         String[] split = proximalPoint.split(",");
 
-        Iterable<BosEdge> edgesByRouteId = edgeRepo.findAllByRoute(route);
-        List<String> list = new ArrayList<String>();
-        for (BosEdge bosEdge : edgesByRouteId) {
-            list.add(bosEdge.getFrom());
-            list.add(bosEdge.getTo());
-            list.add(bosEdge.getDistance());
-        }
-        GraphService graphService = new GraphService(String.join(",", list));
+
+        GraphService graphService = new GraphService(String.join(",", relationlist));
         List<Integer> shortestPath = graphService.getShortestPath(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
         if (shortestPath.size() == 1) {
             statu = 3;
             return null;
         }
-        List<List<Map<String, Object>>> lists = new ArrayList<List<Map<String, Object>>>();
-        List<Map<String, Object>> list1 = null;
-        Map<String, Object> map1 = null;
-        Map<String, Object> map2 = null;
+        List<List<Double>> list1 = null;
         for (int i = 0; i < shortestPath.size() - 1; i++) {
-            list1 = new ArrayList<Map<String, Object>>();
-            Optional<BosPoint> byId = pointRepo.findByKey(shortestPath.get(i).toString());
-            if (byId.isPresent()) {
-                map1 = new HashMap<String, Object>();
-                BosPoint bosPoint = byId.get();
-                map1.put("x", bosPoint.getX());
-                map1.put("y", bosPoint.getY());
-                map1.put("z", bosPoint.getZ());
-                map1.put("key", bosPoint.getKey());
-                list1.add(map1);
-            }
-            Optional<BosPoint> byId2 = pointRepo.findByKey(shortestPath.get(i + 1).toString());
-            if (byId2.isPresent()) {
-                map2 = new HashMap<String, Object>();
-                BosPoint bosPoint = byId2.get();
-                map2.put("x", bosPoint.getX());
-                map2.put("y", bosPoint.getY());
-                map2.put("z", bosPoint.getZ());
-                map2.put("key", bosPoint.getKey());
-                list1.add(map2);
-            }
-            lists.add(list1);
+            list1 = new ArrayList<>();
+            list1.add(points.get(shortestPath.get(i).toString()));
         }
         final double getOutlineEndTime = System.nanoTime();
         System.out.println(String.format("拓扑最短路径提取完成！共耗时 %.2f 秒。",
                 (getOutlineEndTime - startTime) / 1.E9));
-        return lists;
+        return list1;
     }
 
 
-    public String getProximalPoint(String point1, String point2, String route) {
+    public String getProximalPoint(String point1, String point2, Map<String,List<Double>> points) {
         double x1 = new Double(0), x2 = new Double(0);
         double y1 = new Double(0), y2 = new Double(0);
         double z1 = new Double(0), z2 = new Double(0);
-        if (point1.split(",").length == 1) {
-            Optional<BosPoint> byId = pointRepo.findByKey(point1);
-            if (byId.isPresent()) {
-                BosPoint bosPoint = byId.get();
-                x1 = bosPoint.getX();
-                y1 = bosPoint.getY();
-                z1 = bosPoint.getZ();
-            } else
-                return "";
-        } else {
+
             x1 = Double.parseDouble(point1.split(",")[0]);
             y1 = Double.parseDouble(point1.split(",")[1]);
             z1 = Double.parseDouble(point1.split(",")[2]);
-        }
-        if (point2.split(",").length == 1) {
-            Optional<BosPoint> byId = pointRepo.findByKey(point2);
-            if (byId.isPresent()) {
-                BosPoint bosPoint = byId.get();
-                x2 = bosPoint.getX();
-                y2 = bosPoint.getY();
-                z2 = bosPoint.getZ();
-            } else
-                return "";
-        } else {
+
+
             x2 = Double.parseDouble(point2.split(",")[0]);
             y2 = Double.parseDouble(point2.split(",")[1]);
             z2 = Double.parseDouble(point2.split(",")[2]);
-        }
 
-        Iterable<BosPoint> allByRoute = pointRepo.findAllByRoute(route);
-        Map<Double, String> treeMap1 = new TreeMap<Double, String>();
-        Map<Double, String> treeMap2 = new TreeMap<Double, String>();
-        for (BosPoint v2 : allByRoute) {
+
+        for (String key : points.keySet()) {
+            List<Double> v2 = points.get(key)
             //求出两个点之间的距离
-            double distance1 = Math.sqrt((x1 - v2.getX()) * (x1 - v2.getX()) + ((y1 - v2.getY()) * (y1 - v2.getY())) + (z1 - v2.getZ()) * (z1 - v2.getZ()));
+            double distance1 = Math.sqrt((x1 - v2[0]) * (x1 - v2.getX()) + ((y1 - v2.getY()) * (y1 - v2.getY())) + (z1 - v2.getZ()) * (z1 - v2.getZ()));
             //保留三位小数
             distance1 = (double) Math.round(distance1 * 1000) / 1000;
             treeMap1.put(distance1, v2.getKey());

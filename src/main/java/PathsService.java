@@ -46,8 +46,8 @@ public class PathsService {
     * @Date: 2019/6/3 
     */ 
     
-    public  List<vertexpoi> getTopologyShortest(){
-        List<vertexpoi> vertexpoiList = new ArrayList<>();
+    public  List<List<Double>> getTopologyShortest(){
+        List<List<Double>> vertexpoiList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
         vertexpoiList=hybridPathService.getShortest();
         return vertexpoiList;
