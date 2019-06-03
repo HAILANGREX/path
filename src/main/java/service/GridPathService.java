@@ -19,6 +19,10 @@ public class GridPathService {
     private Map<Integer,List<Entrance>> entrancemap = new HashMap<>();   //每层楼的楼梯口
     private Map<Integer,Map<String,List<Entrance>>> entranceInMap = new HashMap<>();   //每层楼的楼梯口
     private List<vertexpoi> gridPathOverFloor = new ArrayList<>();  //最终的输出路径
+
+    private List<Map<String,Object>> stairGrids = new ArrayList<>(); //初始化stairGrids参数
+    private List<BosStairGrid> bosStairGrids = new ArrayList<>(); //初始化解析获取的stairGrids
+
     private BosStairGridRepository bosStairGridRepo;
     private BosGridsRepository bosGridsRepo;
 
@@ -156,7 +160,7 @@ public class GridPathService {
     * @Author: Wang
     * @Date: 2019/3/25
     */
-    private List<vertexpoi> getPathInFloor (Entrance e1,Entrance e2,Double floorHigh) throws IOException {
+    private List<vertexpoi> getPathInFloor (Entrance e1,Entrance e2,Double floorHigh) throws IOException,PathExceptions {
         List<vertexpoi> path = new ArrayList<>();
         InputStream is =  FastDFS.downloadFileAsStream(gridsMap.get(floorHigh).getPath());
         int[][] gridmap =  this.getCsvDataNew(is);
@@ -258,20 +262,23 @@ public class GridPathService {
                 minfloor = floorPath.get(i);
                 maxfloor =floorPath.get(i+1);
 
-                Optional <BosStairGrid> bosStairGrids = bosStairGridRepo.findByModelAndStartheightAndEndheightAndStartgrid_XAndStartgrid_Y(filekey,minfloor,maxfloor,inter.getX(),inter.getY());
-                gridPathOverFloor.addAll(bosStairGrids.get().getXyzlist());
-                inter2 =bosStairGrids.get().getEndgrid();
+                BosStairGrid bosStairGrids = this.getBosStairGrid(filekey,minfloor,maxfloor,inter.getX(),inter.getY(),"start");
+                if(null != bosStairGrids){
+                    gridPathOverFloor.addAll(bosStairGrids.getXyzlist());
+                    inter2 =bosStairGrids.getEndgrid();
+                }
                 inter = this.shortestUpEntrance(inter2,floorPath.get(i+1));
             }
             else {
                 maxfloor = floorPath.get(i);
                 minfloor =floorPath.get(i+1);
-                Optional <BosStairGrid> bosStairGrids = bosStairGridRepo.findByModelAndStartheightAndEndheightAndEndgrid_XAndEndgrid_Y(filekey,minfloor,maxfloor,inter.getX(),inter.getY());
-
-                List<vertexpoi> path1 = bosStairGrids.get().getXyzlist();
-                Collections.reverse(path1);
-                gridPathOverFloor.addAll(path1);
-                inter2 = bosStairGrids.get().getStartgrid();
+                BosStairGrid bosStairGrids = this.getBosStairGrid(filekey,minfloor,maxfloor,inter.getX(),inter.getY(),"end");
+                if(null != bosStairGrids){
+                    List<vertexpoi> path1 = bosStairGrids.getXyzlist();
+                    Collections.reverse(path1);
+                    gridPathOverFloor.addAll(path1);
+                    inter2 = bosStairGrids.getStartgrid();
+                }
                 inter = this.shortestDownEntrance(inter2,floorPath.get(i+1));
             }
         }
@@ -456,7 +463,7 @@ public class GridPathService {
         return high;
     }
 
-    private void setDistic(String cUnit, Double distic,Double limitCM,Double pointHigh) {
+    private void setDistic(String cUnit, Double distic,Double limitCM,Double pointHigh) throws PathExceptions {
         switch (cUnit) { // 设置离地距离限制
             case "0.1mm":
                 if (null != distic && (distic < 0||distic > limitCM*100.0)) {
@@ -546,5 +553,64 @@ public class GridPathService {
         }
         br.close();
         return str;
+    }
+
+    /**
+     * 初始化楼梯连接参数
+     */
+    public void getBosStairGrid(){
+        for(Map<String,Object> map : stairGrids){
+            BosStairGrid bosStairGrid = new BosStairGrid();
+            bosStairGrid.setModel(map.get("model").toString());
+            //startgrid
+            Map<String,Object> startgrid = (Map<String, Object>) map.get("startgrid");
+            Entrance entrance = new Entrance();
+            entrance.setX(Integer.parseInt(startgrid.get("x").toString()));
+            entrance.setY(Integer.parseInt(startgrid.get("y").toString()));
+            bosStairGrid.setStartgrid(entrance);
+            //xyzlist
+            List<Map<String,Object>> xyzlist = (List<Map<String, Object>>) map.get("xyzlist");
+            List<vertexpoi> vertexpois = new ArrayList<>();
+            for(Map<String,Object> xyzMap : xyzlist){
+                vertexpoi vertexpoi = new vertexpoi();
+                vertexpoi.setX(Double.parseDouble(xyzMap.get("x").toString()));
+                vertexpoi.setY(Double.parseDouble(xyzMap.get("y").toString()));
+                vertexpoi.setZ(Double.parseDouble(xyzMap.get("z").toString()));
+                vertexpois.add(vertexpoi);
+            }
+            bosStairGrid.setXyzlist(vertexpois);
+            bosStairGrid.setStartheight(Integer.parseInt(map.get("startheight").toString()));
+            bosStairGrid.setEndheight(Integer.parseInt(map.get("endheight").toString()));
+            //endgrid
+            Map<String,Object> endgrid = (Map<String, Object>) map.get("endgrid");
+            Entrance entranc = new Entrance();
+            entranc.setX(Integer.parseInt(endgrid.get("x").toString()));
+            entranc.setY(Integer.parseInt(endgrid.get("y").toString()));
+            bosStairGrid.setEndgrid(entranc);
+            bosStairGrids.add(bosStairGrid);
+        }
+    }
+
+    /**
+     * 查询起点楼梯或终点楼梯
+     * @param filekey
+     * @param minfloor
+     * @param maxfloor
+     * @param x
+     * @param y
+     * @param str
+     * @return
+     */
+    public BosStairGrid getBosStairGrid(String filekey,Integer minfloor ,Integer maxfloor,Integer x,Integer y,String str){
+        for(BosStairGrid bosStairGrid : bosStairGrids){
+            switch (str){
+                case "start":
+                    return filekey.equals(bosStairGrid.getModel()) && minfloor == bosStairGrid.getStartheight() && maxfloor == bosStairGrid.getEndheight() && x == bosStairGrid.getStartgrid().getX() && y == bosStairGrid.getStartgrid().getY()?bosStairGrid:null;
+                case "end":
+                    return filekey.equals(bosStairGrid.getModel()) && minfloor == bosStairGrid.getStartheight() && maxfloor == bosStairGrid.getEndheight() && x == bosStairGrid.getEndgrid().getX() && y == bosStairGrid.getEndgrid().getY()?bosStairGrid:null;
+                default:break;
+            }
+        }
+        return null;
     }
 }
