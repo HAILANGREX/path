@@ -16,7 +16,7 @@ import java.util.zip.ZipOutputStream;
 
 
 
-public class ComponentService {
+public class HybridPathService {
 
 
 

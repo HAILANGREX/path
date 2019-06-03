@@ -1,18 +1,15 @@
 package entity;
 
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Key;
-import org.springframework.data.annotation.Id;
 
 import java.util.List;
 
-@Document("stairGrids")
+
 public class BosStairGrid {
 
-    @Id
+
     private String id;
 
-    @Key
+
     private String key;
 
     private String model;  //网格地图对应的模型
