@@ -441,9 +441,9 @@ public class HybridPathService {
     }
 
 
-    public List<List<Double>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points,String route) {
+    public List<List<Double>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points) {
         final double startTime = System.nanoTime();
-        String proximalPoint = getProximalPoint(point1, point2, route);
+        String proximalPoint = getProximalPoint(point1, point2, points);
         if ("".equals(proximalPoint)) {
             statu = 1;
             return null;
@@ -487,20 +487,21 @@ public class HybridPathService {
             y2 = Double.parseDouble(point2.split(",")[1]);
             z2 = Double.parseDouble(point2.split(",")[2]);
 
-
+        Map<Double, String> treeMap1 = new TreeMap<Double, String>();
+        Map<Double, String> treeMap2 = new TreeMap<Double, String>();
         for (String key : points.keySet()) {
-            List<Double> v2 = points.get(key)
+            List<Double> v2 = points.get(key);
             //求出两个点之间的距离
-            double distance1 = Math.sqrt((x1 - v2[0]) * (x1 - v2.getX()) + ((y1 - v2.getY()) * (y1 - v2.getY())) + (z1 - v2.getZ()) * (z1 - v2.getZ()));
+            double distance1 = Math.sqrt((x1 - v2.get(0)) * (x1 - v2.get(0)) + ((y1 - v2.get(1)) * (y1 - v2.get(1))) + (z1 - v2.get(2)) * (z1 - v2.get(2)));
             //保留三位小数
             distance1 = (double) Math.round(distance1 * 1000) / 1000;
-            treeMap1.put(distance1, v2.getKey());
+            treeMap1.put(distance1, key);
 
             //求出两个点之间的距离
-            double distance2 = Math.sqrt((x2 - v2.getX()) * (x2 - v2.getX()) + ((y2 - v2.getY()) * (y2 - v2.getY())) + (z2 - v2.getZ()) * (z2 - v2.getZ()));
+            double distance2 = Math.sqrt((x2 - v2.get(0)) * (x2 - v2.get(0)) + ((y2 - v2.get(1)) * (y2 - v2.get(1))) + (z2 - v2.get(2)) * (z2 - v2.get(2)));
             //保留三位小数
             distance2 = (double) Math.round(distance2 * 1000) / 1000;
-            treeMap2.put(distance2, v2.getKey());
+            treeMap2.put(distance2, key);
         }
         if (treeMap1.size() <= 0) {
             return "1";

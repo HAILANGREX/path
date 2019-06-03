@@ -5,6 +5,7 @@ import service.HybridPathService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PathsService {
 
@@ -46,10 +47,10 @@ public class PathsService {
     * @Date: 2019/6/3 
     */ 
     
-    public  List<List<Double>> getTopologyShortest(){
+    public  List<List<Double>> getTopologyShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points){
         List<List<Double>> vertexpoiList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
-        vertexpoiList=hybridPathService.getShortest();
+        vertexpoiList=hybridPathService.getShortest(point1, point2, relationlist,points);
         return vertexpoiList;
     }
 
