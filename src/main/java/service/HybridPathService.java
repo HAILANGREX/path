@@ -76,41 +76,41 @@ public class HybridPathService {
         switch (cUnit) { // 设置离地距离限制
             case "0.1mm":
                 if (null != distic && (distic < 0 || distic > limitCM * 100.0)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), "单位0.1mm时，gridWidth取值范围是 500-5000");
+                    throw new PathExceptions("单位0.1mm时，gridWidth取值范围是 500-5000");
                 }
                 break;
             case "1mm":
                 if (null != distic && (distic < 0 || distic > limitCM * 10)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh + "高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh + "高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1cm":
                 if (null != distic && (distic < 0 || distic > limitCM)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh + "高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh + "高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1dm":
                 if (null != distic && (distic < 0 || distic > limitCM / 10.0)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh + "高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh + "高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1m":
                 if (null != distic && (distic < 0 || distic > limitCM / 100.0)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh + "高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh + "高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1ft": // 1英尺(ft)=30.48厘米(cm)
                 if (null != distic && (distic < 0 || distic > limitCM / 30.48)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh + "高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh + "高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1inch": // 1英寸(in)=2.54厘米(cm)
                 if (null != distic && (distic < 0 || distic > limitCM / 2.54)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh + "高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh + "高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             default:
-                throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), "单位输入有误");
+                throw new PathExceptions("单位输入有误");
         }
     }
 
@@ -119,7 +119,7 @@ public class HybridPathService {
         String[] split1 = point1.split(",");
         String[] split2 = point2.split(",");
         if (split1.length != 3 || split2.length != 3) {
-            throw new BadRequestParameterException("请输入规范的始终点坐标");
+            throw new PathExceptions("请输入规范的始终点坐标");
         }
 
         vertexpoi vertexpoi1 = new vertexpoi();
@@ -136,7 +136,7 @@ public class HybridPathService {
         this.getGrids(filekey);                                             //存储不同高度的栅格
         Optional<BosUnit> bosUnit = bosUnitRepository.findByKey(filekey);
         if (!bosUnit.isPresent() || bosUnit.get().getUnit() == null) {
-            throw new BadRequestParameterException("单位未提取，请提取单位");
+            throw new PathExceptions("单位未提取，请提取单位");
         }
         String unit = bosUnit.get().getUnit();
         Double h1 = this.getShortestFloor(vertexpoi1.getZ(), unit);
@@ -177,11 +177,11 @@ public class HybridPathService {
             Entrance e1star = this.getPosition(vertexpoi1, h1);
             Entrance e2star = this.getPosition(vertexpoi2, h2);
             if (e1star == null || e2star == null) {
-                throw new BadRequestParameterException("超出打点范围");
+                throw new PathExceptions("超出打点范围");
             }
             if (h1 == h2) {
                 if (e1star.equals(e2star)) {
-                    throw new BadRequestParameterException("始终点距离过近，请重新打点");
+                    throw new PathExceptions("始终点距离过近，请重新打点");
                 }
 
                 if(gridsMap.get(h1).getGridSettings().getRow()*gridsMap.get(h1).getGridSettings().getCol()<=30000)
@@ -241,7 +241,7 @@ public class HybridPathService {
             GraphService graphService = new GraphService(String.join(",", list));
             List<Integer> shortestPath = graphService.getShortestPath(Integer.parseInt(starkey), Integer.parseInt(endkey));
             if (shortestPath.size() == 0) {
-                throw new BadRequestParameterException("未能查询到拓扑可通路径");
+                throw new PathExceptions("未能查询到拓扑可通路径");
             }
 
             List<vertexpoi> medpath = new ArrayList<>();                              //中间路径
@@ -279,7 +279,7 @@ public class HybridPathService {
 
                     final double midTime = System.nanoTime();
                     double slicingTime3 = (midTime - path2Time) / 1.E9;
-                    LOGGER.info("混合路径搜寻总时间" + (slicingTime3 + slicingTime2 + slicingTime));
+                    System.out.println("混合路径搜寻总时间" + (slicingTime3 + slicingTime2 + slicingTime));
 
                     pathA1.addAll(medpath);
                     pathA1.addAll(pathA2);
@@ -304,8 +304,8 @@ public class HybridPathService {
 
         } else {
             gridsMap.clear();
-            LOGGER.info(filekey+" : 栅格与拓扑路网高度不统一");
-            throw new BadRequestParameterException("未能查询到拓扑可通路径");
+            System.out.println(filekey+" : 栅格与拓扑路网高度不统一");
+            throw new PathExceptions("未能查询到拓扑可通路径");
         }
     }
 
@@ -330,7 +330,7 @@ public class HybridPathService {
         }
         if(path.isEmpty())
         {
-            throw new BadRequestParameterException("无可达路径");
+            throw new PathExceptions("无可达路径");
         }
         else
         {
@@ -411,7 +411,7 @@ public class HybridPathService {
         int[][] gridmap = this.getCsvDataNew(is);
         int a = gridmap[star.getY()][star.getX()];
         if (a == 0) {
-            throw new BadRequestParameterException("高度为：" + high + "处的打点为障碍物点");
+            throw new PathExceptions("高度为：" + high + "处的打点为障碍物点");
         }
         List<Node> entrances = new ArrayList<>();
         for (Entrance entrance : keybyentranceh.keySet()) {
@@ -421,8 +421,8 @@ public class HybridPathService {
         path = new HybridRoteService().start(info);
 
         if (path.size() == 0) {
-            LOGGER.info("高度为：" + high + "未能搜寻到拓扑叶子节点");
-            throw new BadRequestParameterException("未能查询到拓扑可通路径");
+            System.out.println("高度为：" + high + "未能搜寻到拓扑叶子节点");
+            throw new PathExceptions("未能查询到拓扑可通路径");
         }
 
         return path;
@@ -496,7 +496,7 @@ public class HybridPathService {
             lists.add(list1);
         }
         final double getOutlineEndTime = System.nanoTime();
-        LOGGER.info(String.format("拓扑最短路径提取完成！共耗时 %.2f 秒。",
+        System.out.println(String.format("拓扑最短路径提取完成！共耗时 %.2f 秒。",
                 (getOutlineEndTime - startTime) / 1.E9));
         return lists;
     }
@@ -601,17 +601,17 @@ public class HybridPathService {
 
             Optional<BosUnit> bosUnit = bosUnitRepository.findByKey(model);
             if (!bosUnit.isPresent() || bosUnit.get().getUnit() == null) {
-                throw new BadRequestParameterException("单位未提取，请提取单位");
+                throw new PathExceptions("单位未提取，请提取单位");
             }
             String unit = bosUnit.get().getUnit();
             gridPathService.setGridPath(model, vertexpoi1, vertexpoi2, unit);
             List<vertexpoi> gridPathOverFloor = gridPathService.getGridPathOverFloor();
 
-            LOGGER.info("最短路径点数=" + gridPathOverFloor.size());
+            System.out.println("最短路径点数=" + gridPathOverFloor.size());
 
             //提取计时
             final double getOutlineEndTime = System.nanoTime();
-            LOGGER.info(String.format(model + ":获取栅格地图最短路径完成！共耗时 %.2f 秒。",
+            System.out.println(String.format(model + ":获取栅格地图最短路径完成！共耗时 %.2f 秒。",
                     (getOutlineEndTime - startTime) / 1.E9));
 
             if (gridPathOverFloor.size() != 0)

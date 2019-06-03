@@ -51,7 +51,7 @@ public class GridPathService {
        return fileList;
     }
 
-    public void setGridPath(String modelkey,vertexpoi poi1,vertexpoi poi2,String unit) throws IOException {
+    public void setGridPath(String modelkey,vertexpoi poi1,vertexpoi poi2,String unit) throws IOException,PathExceptions {
         this.getGrids(modelkey);
         this.getStair(modelkey);
         this.setDijkStraMap(stairsConnect);
@@ -60,13 +60,13 @@ public class GridPathService {
         Entrance e1 =this.getPosition(poi1,h1);
         Entrance e2 =this.getPosition(poi2,h2);
         if(null == e1 && null != e2){
-            throw new BadRequestParameterException("起始点超出范围");
+            throw new PathExceptions("起始点超出范围");
         }
         if(null == e2 && null != e1){
-            throw new BadRequestParameterException("终点超出范围");
+            throw new PathExceptions("终点超出范围");
         }
         if(null == e2 && null == e1){
-            throw new BadRequestParameterException("起始点,终点均超出范围");
+            throw new PathExceptions("起始点,终点均超出范围");
         }
 
 
@@ -81,7 +81,7 @@ public class GridPathService {
             floorPath=this.getShortestPath((int)Math.ceil(h1),(int)Math.ceil(h2) );
 
             if(floorPath.isEmpty()||floorPath.size()==1){
-                throw new BadRequestParameterException(BosCodeEnum.NOT_FOUND.getCode(),"无楼层连接关系");
+                throw new PathExceptions("无楼层连接关系");
             }
             this.getPathOverFloor(e1,e2,modelkey);
         }
@@ -164,13 +164,13 @@ public class GridPathService {
         int a=gridmap[e1.getY()][e1.getX()];
         int b=gridmap[e2.getY()][e2.getX()];
         if(a == 0 && b != 0){
-            throw new BadRequestParameterException("高度为："+floorHigh+"处的起始点为障碍物");
+            throw new PathExceptions("高度为："+floorHigh+"处的起始点为障碍物");
         }
         if(b == 0 && a != 0){
-            throw new BadRequestParameterException("高度为："+floorHigh+"处的终点为障碍物");
+            throw new PathExceptions("高度为："+floorHigh+"处的终点为障碍物");
         }
         if(a == 0 && b == 0){
-            throw new BadRequestParameterException("高度为："+floorHigh+"处的起始点，终点均为障碍物");
+            throw new PathExceptions("高度为："+floorHigh+"处的起始点，终点均为障碍物");
         }
 
         MapInfo info=new MapInfo(gridmap,gridmap[0].length, gridmap.length,new Node(e1.getX(), e1.getY()), new Node(e2.getX(), e2.getY()));
@@ -187,7 +187,7 @@ public class GridPathService {
         }
         if(path.isEmpty())
         {
-            throw new BadRequestParameterException("无可达路径");
+            throw new PathExceptions("无可达路径");
         }
         else
         {
@@ -223,12 +223,12 @@ public class GridPathService {
         this.gridPathOverFloor = gridPathOverFloor;
     }
 
-    /** 
-    * @Description: 跨楼层路径 
-    * @Param: [star, end, filekey] 
-    * @return: void 
-    * @Author: Mr.Wang 
-    * @Date: 2019/3/25 
+    /**
+    * @Description: 跨楼层路径
+    * @Param: [star, end, filekey]
+    * @return: void
+    * @Author: Mr.Wang
+    * @Date: 2019/3/25
     */
     private void getPathOverFloor(Entrance star,Entrance end,String filekey) throws IOException {
         Entrance inter =new Entrance();
@@ -460,41 +460,41 @@ public class GridPathService {
         switch (cUnit) { // 设置离地距离限制
             case "0.1mm":
                 if (null != distic && (distic < 0||distic > limitCM*100.0)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), "单位0.1mm时，gridWidth取值范围是 500-5000");
+                    throw new PathExceptions("单位0.1mm时，gridWidth取值范围是 500-5000");
                 }
                 break;
             case "1mm":
                 if (null != distic && (distic < 0||distic > limitCM*10)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(),pointHigh+"高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh+"高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1cm":
                 if (null != distic && (distic < 0||distic > limitCM)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(),pointHigh+"高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh+"高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1dm":
                 if (null != distic && (distic < 0||distic > limitCM/10.0)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh+"高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions( pointHigh+"高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1m":
                 if (null != distic && (distic < 0||distic > limitCM/100.0)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(),pointHigh+"高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh+"高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1ft": // 1英尺(ft)=30.48厘米(cm)
                 if (null != distic && (distic < 0||distic > limitCM/30.48)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh+"高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions( pointHigh+"高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             case "1inch": // 1英寸(in)=2.54厘米(cm)
                 if (null != distic && (distic < 0||distic > limitCM/2.54)) {
-                    throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), pointHigh+"高度处的点超出地面2m范围，请重新打点");
+                    throw new PathExceptions(pointHigh+"高度处的点超出地面2m范围，请重新打点");
                 }
                 break;
             default:
-                throw new BadRequestParameterException(BosCodeEnum.BAD_REQUEST.getCode(), "单位输入有误");
+                throw new PathExceptions("单位输入有误");
         }
     }
 
