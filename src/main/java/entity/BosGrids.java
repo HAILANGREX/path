@@ -1,20 +1,13 @@
 package entity;
 
-import com.arangodb.springframework.annotation.Document;
-import com.arangodb.springframework.annotation.Key;
-import org.springframework.data.annotation.Id;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Document("grids")
+
 public class BosGrids {
 
-    @Id
-    private String id;
 
-    @Key
-    private String key;
 
     private String model; // 网格地图对应的模型
 
@@ -22,21 +15,6 @@ public class BosGrids {
 
     private GridSettings gridSettings; // 存储网格地图生成参数
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
 
     public String getModel() {
         return model;
@@ -66,9 +44,8 @@ public class BosGrids {
         super();
     }
 
-    public BosGrids(String id, String key, String model, String path, GridSettings settings) {
-        this.id = id;
-        this.key = key;
+    public BosGrids( String model, String path, GridSettings settings) {
+
         this.model = model;
         this.path = path;
         this.gridSettings = settings;
