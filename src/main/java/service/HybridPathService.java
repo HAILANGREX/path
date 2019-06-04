@@ -115,7 +115,7 @@ public class HybridPathService {
     }
 
     //混合路网获取最短路径
-    public List<vertexpoi> getHybridShortest(String point1, String point2, String route, String filekey) throws IOException {
+    public List<vertexpoi> getHybridShortest(String point1, String point2, Map<String,InputStream> geoPath,List<Map<String,Object>> grids,String route, String filekey) throws IOException {
         String[] split1 = point1.split(",");
         String[] split2 = point2.split(",");
         if (split1.length != 3 || split2.length != 3) {
@@ -419,7 +419,6 @@ public class HybridPathService {
         }
         MapInformation info = new MapInformation(gridmap, gridmap[0].length, gridmap.length, new Node(star.getX(), star.getY()), entrances);
         path = new HybridRoteService().start(info);
-
         if (path.size() == 0) {
             System.out.println("高度为：" + high + "未能搜寻到拓扑叶子节点");
             throw new PathExceptions("未能查询到拓扑可通路径");
