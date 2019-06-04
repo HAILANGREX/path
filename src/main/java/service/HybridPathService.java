@@ -25,8 +25,243 @@ public class HybridPathService {
 
 
     private Map<Double, BosGrids> gridsMap = new HashMap<>();
+    private Map<String,InputStream> geoPath = new HashMap<>();
 
     private int statu;
+
+
+
+    private List<vertexpoi> getPathInFloor (Entrance e1,Entrance e2,Double floorHigh) throws IOException {
+        List<vertexpoi> path = new ArrayList<>();
+        InputStream is =  geoPath.get(gridsMap.get(floorHigh).getPath());
+        int[][] gridmap =  this.getCsvDataNew(is);
+
+
+        MapInfo info=new MapInfo(gridmap,gridmap[0].length, gridmap.length,new Node(e1.getX(), e1.getY()), new Node(e2.getX(), e2.getY()));
+
+        List<Entrance> entrancepath =new ArrayList<>();
+        entrancepath = new GridService().start(info);
+        for (Entrance entrance:entrancepath)
+        {
+            vertexpoi poi = new vertexpoi();
+            poi.setX(((entrance.getY()+0.5)*gridsMap.get(floorHigh).getGridSettings().getGridHeight())+gridsMap.get(floorHigh).getGridSettings().getX());
+            poi.setY(((entrance.getX()+0.5)*gridsMap.get(floorHigh).getGridSettings().getGridWidth())+gridsMap.get(floorHigh).getGridSettings().getY());
+            poi.setZ(floorHigh);
+            path.add(poi);
+        }
+        if(path.isEmpty())
+        {
+            throw new PathExceptions("无可达路径");
+        }
+        else
+        {
+            return path;
+        }
+    }
+
+
+
+    /**
+     * 通过filekey查询并将信息存储到gridmap中
+     */
+    private void getGrids(List<Map<String,Object>> grids){
+        for(Map<String,Object> map : grids){
+            BosGrids bosGrid = new BosGrids();
+            GridSettings gridSettings = new GridSettings();
+            Map<String,Object> gridSettingMap = (Map<String, Object>) map.get("gridSettings");
+            gridSettings.setGridHeight(Double.parseDouble(gridSettingMap.get("gridHeight").toString()));
+            gridSettings.setCol(Integer.parseInt(gridSettingMap.get("col").toString()));
+            gridSettings.setUnit(gridSettingMap.get("unit").toString());
+            gridSettings.setX(Double.parseDouble(gridSettingMap.get("x").toString()));
+            gridSettings.setY(Double.parseDouble(gridSettingMap.get("y").toString()));
+            gridSettings.setRow(Integer.parseInt(gridSettingMap.get("row").toString()));
+            gridSettings.setGridWidth(Double.parseDouble(gridSettingMap.get("gridWidth").toString()));
+            gridSettings.setStatus(gridSettingMap.get("status").toString());
+            gridSettings.setHeight(Double.parseDouble(gridSettingMap.get("height").toString()));
+            bosGrid.setGridSettings(gridSettings);
+            bosGrid.setPath(map.get("path").toString());
+            bosGrid.setModel(map.get("model").toString());
+            gridsMap.put(Double.parseDouble(gridSettingMap.get("height").toString()), bosGrid);
+        }
+    }
+    private int[][] getCsvDataNew(InputStream inputStream) throws IOException {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+        String line = "";
+        ArrayList<int[]> lineList = new ArrayList<int[]>();
+        // Read a single line from the file until there are no more lines to read
+        while ((line = br.readLine()) != null) {
+            StringTokenizer st = new StringTokenizer(line, ",");
+            COLUMN_NUM = st.countTokens();
+            int[] currCol = new int[COLUMN_NUM];
+            for (int i = 0; i < COLUMN_NUM; i++) {
+                if (st.hasMoreTokens()) {
+                    currCol[i] = Integer.parseInt(st.nextToken());
+                }
+            }
+            lineList.add(currCol);
+        }
+
+        int[][] str = new int[lineList.size()][COLUMN_NUM];
+        for (int i = 0; i < lineList.size(); i++) {
+            for (int j = 0; j < COLUMN_NUM; j++) {
+                str[i][j] = lineList.get(i)[j];
+                //System.out.println(str[i][x]);
+            }
+        }
+
+        br.close();
+
+        return str;
+    }
+
+    private Entrance getPosition(vertexpoi poi, Double high) {
+        Entrance entrance = new Entrance();
+
+        entrance.setX((int) Math.floor((poi.getY() - gridsMap.get(high).getGridSettings().getY()) / gridsMap.get(high).getGridSettings().getGridWidth()));
+        entrance.setY((int) Math.floor((poi.getX() - gridsMap.get(high).getGridSettings().getX()) / gridsMap.get(high).getGridSettings().getGridHeight()));
+        if (entrance.getX() >= 0 && entrance.getX() <= gridsMap.get(high).getGridSettings().getCol() && entrance.getY() >= 0 && entrance.getY() <= gridsMap.get(high).getGridSettings().getRow()) {
+            return entrance;
+        } else return null;
+
+    }
+
+    private Map<Entrance, String> saveEntrance(Double high, List<String> keys, Map<String, vertexpoi> pointsbykey) { //将entrance与key的关系相关联
+        Map<Entrance, String> keybyentrance = new HashMap<>();
+        for (String key : keys) {
+            vertexpoi vertexpoi = pointsbykey.get(key);
+            Entrance entrance = this.getPosition(vertexpoi, high);
+            if (entrance != null) {
+                keybyentrance.put(entrance, key);
+            }
+        }
+        return keybyentrance;
+    }
+
+    private List<Entrance> hybridpathlist(Map<Entrance, String> keybyentranceh, Double high, Entrance star) throws IOException {
+        List<Entrance> path = new ArrayList<>();
+        InputStream is = geoPath.get(gridsMap.get(high).getPath());
+        int[][] gridmap = this.getCsvDataNew(is);
+        int a = gridmap[star.getY()][star.getX()];
+        if (a == 0) {
+            throw new PathExceptions("高度为：" + high + "处的打点为障碍物点");
+        }
+        List<Node> entrances = new ArrayList<>();
+        for (Entrance entrance : keybyentranceh.keySet()) {
+            entrances.add(new Node(entrance.getX(), entrance.getY()));
+        }
+        MapInformation info = new MapInformation(gridmap, gridmap[0].length, gridmap.length, new Node(star.getX(), star.getY()), entrances);
+        path = new HybridRoteService().start(info);
+        if (path.size() == 0) {
+            System.out.println("高度为：" + high + "未能搜寻到拓扑叶子节点");
+            throw new PathExceptions("未能查询到拓扑可通路径");
+        }
+
+        return path;
+    }
+
+    private List<vertexpoi> toVertexpoi(Double floorHigh, List<Entrance> entrancepath) {
+        List<vertexpoi> path = new ArrayList<>();
+        for (Entrance entrance : entrancepath) {
+            vertexpoi poi = new vertexpoi();
+            poi.setX(((entrance.getY() + 0.5) * gridsMap.get(floorHigh).getGridSettings().getGridHeight()) + gridsMap.get(floorHigh).getGridSettings().getX());
+            poi.setY(((entrance.getX() + 0.5) * gridsMap.get(floorHigh).getGridSettings().getGridWidth()) + gridsMap.get(floorHigh).getGridSettings().getY());
+            poi.setZ(floorHigh);
+            path.add(poi);
+        }
+        return path;
+    }
+
+
+    /**
+    * @Description: 获取拓扑最短路径
+    * @Param: [point1, point2, relationlist, points]
+    * @return: java.util.List<java.util.List<java.lang.Double>>
+    * @Author: Wang
+    * @Date: 2019/6/4
+    */
+
+    public List<List<Double>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points) {
+        final double startTime = System.nanoTime();
+        String proximalPoint = getProximalPoint(point1, point2, points);
+        if ("".equals(proximalPoint)) {
+            statu = 1;
+            return null;
+        }
+        if ("1".equals(proximalPoint)) {
+            statu = 2;
+            return null;
+        }
+        String[] split = proximalPoint.split(",");
+
+
+        GraphService graphService = new GraphService(String.join(",", relationlist));
+        List<Integer> shortestPath = graphService.getShortestPath(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
+        if (shortestPath.size() == 1) {
+            statu = 3;
+            return null;
+        }
+        List<List<Double>> list1 = null;
+        for (int i = 0; i < shortestPath.size() - 1; i++) {
+            list1 = new ArrayList<>();
+            list1.add(points.get(shortestPath.get(i).toString()));
+        }
+        final double getOutlineEndTime = System.nanoTime();
+        System.out.println(String.format("拓扑最短路径提取完成！共耗时 %.2f 秒。",
+                (getOutlineEndTime - startTime) / 1.E9));
+        return list1;
+    }
+
+
+    public String getProximalPoint(String point1, String point2, Map<String,List<Double>> points) {
+        double x1 = new Double(0), x2 = new Double(0);
+        double y1 = new Double(0), y2 = new Double(0);
+        double z1 = new Double(0), z2 = new Double(0);
+
+            x1 = Double.parseDouble(point1.split(",")[0]);
+            y1 = Double.parseDouble(point1.split(",")[1]);
+            z1 = Double.parseDouble(point1.split(",")[2]);
+
+
+            x2 = Double.parseDouble(point2.split(",")[0]);
+            y2 = Double.parseDouble(point2.split(",")[1]);
+            z2 = Double.parseDouble(point2.split(",")[2]);
+
+        Map<Double, String> treeMap1 = new TreeMap<Double, String>();
+        Map<Double, String> treeMap2 = new TreeMap<Double, String>();
+        for (String key : points.keySet()) {
+            List<Double> v2 = points.get(key);
+            //求出两个点之间的距离
+            double distance1 = Math.sqrt((x1 - v2.get(0)) * (x1 - v2.get(0)) + ((y1 - v2.get(1)) * (y1 - v2.get(1))) + (z1 - v2.get(2)) * (z1 - v2.get(2)));
+            //保留三位小数
+            distance1 = (double) Math.round(distance1 * 1000) / 1000;
+            treeMap1.put(distance1, key);
+
+            //求出两个点之间的距离
+            double distance2 = Math.sqrt((x2 - v2.get(0)) * (x2 - v2.get(0)) + ((y2 - v2.get(1)) * (y2 - v2.get(1))) + (z2 - v2.get(2)) * (z2 - v2.get(2)));
+            //保留三位小数
+            distance2 = (double) Math.round(distance2 * 1000) / 1000;
+            treeMap2.put(distance2, key);
+        }
+        if (treeMap1.size() <= 0) {
+            return "1";
+        }
+        Iterator<Double> iterator = treeMap1.keySet().iterator();
+        String str = "";
+        for (int i = 0; i < treeMap1.size(); i++) {
+            Double key = iterator.next();
+            str += treeMap1.get(key);
+            break;
+        }
+
+        Iterator<Double> iterator2 = treeMap2.keySet().iterator();
+        for (int i = 0; i < treeMap2.size(); i++) {
+            Double key = iterator2.next();
+            str += "," + treeMap2.get(key);
+            break;
+        }
+        return str;
+    }
 
     /**
      * @Description: 根据用户的输入点返回查询到的合适栅格数据
@@ -35,7 +270,7 @@ public class HybridPathService {
      * @Author: Wang
      * @Date: 2019/3/25
      */
-    public Double getShortestFloor(double poi, String unit) {
+    private Double getShortestFloor(double poi, String unit) {
         Double min = Double.POSITIVE_INFINITY;
         Double high = Double.POSITIVE_INFINITY;
         for (Double h : gridsMap.keySet()) {
@@ -55,7 +290,7 @@ public class HybridPathService {
      * @Author: Wang
      * @Date: 2019/3/25
      */
-    public Double getSecondShortestFloor(double poi, String unit, Double pointH) {
+    private Double getSecondShortestFloor(double poi, String unit, Double pointH) {
 
         Map<Double, BosGrids> gridsTestMap = gridsMap;
         gridsTestMap.remove(pointH);
@@ -115,7 +350,7 @@ public class HybridPathService {
     }
 
     //混合路网获取最短路径
-    public List<vertexpoi> getHybridShortest(String point1, String point2, Map<String,InputStream> geoPath,List<Map<String,Object>> grids,String route, String filekey) throws IOException {
+    public List<vertexpoi> getHybridShortest(String point1, String point2,List<String> relationlist,Map<String,List<Double>> points, Map<String,InputStream> geoPaths,List<Map<String,Object>> grids,String unit) throws IOException {
         String[] split1 = point1.split(",");
         String[] split2 = point2.split(",");
         if (split1.length != 3 || split2.length != 3) {
@@ -133,12 +368,8 @@ public class HybridPathService {
         vertexpoi2.setY(Double.parseDouble(split2[1]));
         vertexpoi2.setZ(Double.parseDouble(split2[2]));
 
-        this.getGrids(filekey);                                             //存储不同高度的栅格
-        Optional<BosUnit> bosUnit = bosUnitRepository.findByKey(filekey);
-        if (!bosUnit.isPresent() || bosUnit.get().getUnit() == null) {
-            throw new PathExceptions("单位未提取，请提取单位");
-        }
-        String unit = bosUnit.get().getUnit();
+        geoPath = geoPaths;
+        this.getGrids(grids);                                             //存储不同高度的栅格
         Double h1 = this.getShortestFloor(vertexpoi1.getZ(), unit);
         Double h2 = this.getShortestFloor(vertexpoi2.getZ(), unit);
 
@@ -304,224 +535,10 @@ public class HybridPathService {
 
         } else {
             gridsMap.clear();
-            System.out.println(filekey+" : 栅格与拓扑路网高度不统一");
+            System.out.println("  栅格与拓扑路网高度不统一");
             throw new PathExceptions("未能查询到拓扑可通路径");
         }
     }
-
-
-    private List<vertexpoi> getPathInFloor (Entrance e1,Entrance e2,Double floorHigh) throws IOException {
-        List<vertexpoi> path = new ArrayList<>();
-        InputStream is =  FastDFS.downloadFileAsStream(gridsMap.get(floorHigh).getPath());
-        int[][] gridmap =  this.getCsvDataNew(is);
-
-
-        MapInfo info=new MapInfo(gridmap,gridmap[0].length, gridmap.length,new Node(e1.getX(), e1.getY()), new Node(e2.getX(), e2.getY()));
-
-        List<Entrance> entrancepath =new ArrayList<>();
-        entrancepath = new GridService().start(info);
-        for (Entrance entrance:entrancepath)
-        {
-            vertexpoi poi = new vertexpoi();
-            poi.setX(((entrance.getY()+0.5)*gridsMap.get(floorHigh).getGridSettings().getGridHeight())+gridsMap.get(floorHigh).getGridSettings().getX());
-            poi.setY(((entrance.getX()+0.5)*gridsMap.get(floorHigh).getGridSettings().getGridWidth())+gridsMap.get(floorHigh).getGridSettings().getY());
-            poi.setZ(floorHigh);
-            path.add(poi);
-        }
-        if(path.isEmpty())
-        {
-            throw new PathExceptions("无可达路径");
-        }
-        else
-        {
-            return path;
-        }
-    }
-
-
-
-    /**
-     * 通过filekey查询并将信息存储到gridmap中
-     */
-    private void getGrids(String filekey) {
-        Iterable<BosGrids> grids = bosGridsRepository.findByModelAndPathNotNull(filekey);
-
-        for (BosGrids bosGrid : grids) {
-            gridsMap.put(Double.valueOf(bosGrid.getGridSettings().getHeight()), bosGrid);
-        }
-    }
-
-    public int[][] getCsvDataNew(InputStream inputStream) throws IOException {
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
-        String line = "";
-        ArrayList<int[]> lineList = new ArrayList<int[]>();
-        // Read a single line from the file until there are no more lines to read
-        while ((line = br.readLine()) != null) {
-            StringTokenizer st = new StringTokenizer(line, ",");
-            COLUMN_NUM = st.countTokens();
-            int[] currCol = new int[COLUMN_NUM];
-            for (int i = 0; i < COLUMN_NUM; i++) {
-                if (st.hasMoreTokens()) {
-                    currCol[i] = Integer.parseInt(st.nextToken());
-                }
-            }
-            lineList.add(currCol);
-        }
-
-        int[][] str = new int[lineList.size()][COLUMN_NUM];
-        for (int i = 0; i < lineList.size(); i++) {
-            for (int j = 0; j < COLUMN_NUM; j++) {
-                str[i][j] = lineList.get(i)[j];
-                //System.out.println(str[i][x]);
-            }
-        }
-
-        br.close();
-
-        return str;
-    }
-
-    private Entrance getPosition(vertexpoi poi, Double high) {
-        Entrance entrance = new Entrance();
-
-        entrance.setX((int) Math.floor((poi.getY() - gridsMap.get(high).getGridSettings().getY()) / gridsMap.get(high).getGridSettings().getGridWidth()));
-        entrance.setY((int) Math.floor((poi.getX() - gridsMap.get(high).getGridSettings().getX()) / gridsMap.get(high).getGridSettings().getGridHeight()));
-        if (entrance.getX() >= 0 && entrance.getX() <= gridsMap.get(high).getGridSettings().getCol() && entrance.getY() >= 0 && entrance.getY() <= gridsMap.get(high).getGridSettings().getRow()) {
-            return entrance;
-        } else return null;
-
-    }
-
-    private Map<Entrance, String> saveEntrance(Double high, List<String> keys, Map<String, vertexpoi> pointsbykey) { //将entrance与key的关系相关联
-        Map<Entrance, String> keybyentrance = new HashMap<>();
-        for (String key : keys) {
-            vertexpoi vertexpoi = pointsbykey.get(key);
-            Entrance entrance = this.getPosition(vertexpoi, high);
-            if (entrance != null) {
-                keybyentrance.put(entrance, key);
-            }
-        }
-        return keybyentrance;
-    }
-
-    private List<Entrance> hybridpathlist(Map<Entrance, String> keybyentranceh, Double high, Entrance star) throws IOException {
-        List<Entrance> path = new ArrayList<>();
-        InputStream is = FastDFS.downloadFileAsStream(gridsMap.get(high).getPath());
-        int[][] gridmap = this.getCsvDataNew(is);
-        int a = gridmap[star.getY()][star.getX()];
-        if (a == 0) {
-            throw new PathExceptions("高度为：" + high + "处的打点为障碍物点");
-        }
-        List<Node> entrances = new ArrayList<>();
-        for (Entrance entrance : keybyentranceh.keySet()) {
-            entrances.add(new Node(entrance.getX(), entrance.getY()));
-        }
-        MapInformation info = new MapInformation(gridmap, gridmap[0].length, gridmap.length, new Node(star.getX(), star.getY()), entrances);
-        path = new HybridRoteService().start(info);
-        if (path.size() == 0) {
-            System.out.println("高度为：" + high + "未能搜寻到拓扑叶子节点");
-            throw new PathExceptions("未能查询到拓扑可通路径");
-        }
-
-        return path;
-    }
-
-    private List<vertexpoi> toVertexpoi(Double floorHigh, List<Entrance> entrancepath) {
-        List<vertexpoi> path = new ArrayList<>();
-        for (Entrance entrance : entrancepath) {
-            vertexpoi poi = new vertexpoi();
-            poi.setX(((entrance.getY() + 0.5) * gridsMap.get(floorHigh).getGridSettings().getGridHeight()) + gridsMap.get(floorHigh).getGridSettings().getX());
-            poi.setY(((entrance.getX() + 0.5) * gridsMap.get(floorHigh).getGridSettings().getGridWidth()) + gridsMap.get(floorHigh).getGridSettings().getY());
-            poi.setZ(floorHigh);
-            path.add(poi);
-        }
-        return path;
-    }
-
-
-    public List<List<Double>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points) {
-        final double startTime = System.nanoTime();
-        String proximalPoint = getProximalPoint(point1, point2, points);
-        if ("".equals(proximalPoint)) {
-            statu = 1;
-            return null;
-        }
-        if ("1".equals(proximalPoint)) {
-            statu = 2;
-            return null;
-        }
-        String[] split = proximalPoint.split(",");
-
-
-        GraphService graphService = new GraphService(String.join(",", relationlist));
-        List<Integer> shortestPath = graphService.getShortestPath(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
-        if (shortestPath.size() == 1) {
-            statu = 3;
-            return null;
-        }
-        List<List<Double>> list1 = null;
-        for (int i = 0; i < shortestPath.size() - 1; i++) {
-            list1 = new ArrayList<>();
-            list1.add(points.get(shortestPath.get(i).toString()));
-        }
-        final double getOutlineEndTime = System.nanoTime();
-        System.out.println(String.format("拓扑最短路径提取完成！共耗时 %.2f 秒。",
-                (getOutlineEndTime - startTime) / 1.E9));
-        return list1;
-    }
-
-
-    public String getProximalPoint(String point1, String point2, Map<String,List<Double>> points) {
-        double x1 = new Double(0), x2 = new Double(0);
-        double y1 = new Double(0), y2 = new Double(0);
-        double z1 = new Double(0), z2 = new Double(0);
-
-            x1 = Double.parseDouble(point1.split(",")[0]);
-            y1 = Double.parseDouble(point1.split(",")[1]);
-            z1 = Double.parseDouble(point1.split(",")[2]);
-
-
-            x2 = Double.parseDouble(point2.split(",")[0]);
-            y2 = Double.parseDouble(point2.split(",")[1]);
-            z2 = Double.parseDouble(point2.split(",")[2]);
-
-        Map<Double, String> treeMap1 = new TreeMap<Double, String>();
-        Map<Double, String> treeMap2 = new TreeMap<Double, String>();
-        for (String key : points.keySet()) {
-            List<Double> v2 = points.get(key);
-            //求出两个点之间的距离
-            double distance1 = Math.sqrt((x1 - v2.get(0)) * (x1 - v2.get(0)) + ((y1 - v2.get(1)) * (y1 - v2.get(1))) + (z1 - v2.get(2)) * (z1 - v2.get(2)));
-            //保留三位小数
-            distance1 = (double) Math.round(distance1 * 1000) / 1000;
-            treeMap1.put(distance1, key);
-
-            //求出两个点之间的距离
-            double distance2 = Math.sqrt((x2 - v2.get(0)) * (x2 - v2.get(0)) + ((y2 - v2.get(1)) * (y2 - v2.get(1))) + (z2 - v2.get(2)) * (z2 - v2.get(2)));
-            //保留三位小数
-            distance2 = (double) Math.round(distance2 * 1000) / 1000;
-            treeMap2.put(distance2, key);
-        }
-        if (treeMap1.size() <= 0) {
-            return "1";
-        }
-        Iterator<Double> iterator = treeMap1.keySet().iterator();
-        String str = "";
-        for (int i = 0; i < treeMap1.size(); i++) {
-            Double key = iterator.next();
-            str += treeMap1.get(key);
-            break;
-        }
-
-        Iterator<Double> iterator2 = treeMap2.keySet().iterator();
-        for (int i = 0; i < treeMap2.size(); i++) {
-            Double key = iterator2.next();
-            str += "," + treeMap2.get(key);
-            break;
-        }
-        return str;
-    }
-
 
 
     /**
