@@ -212,7 +212,7 @@ public class HybridPathService {
     }
 
 
-    public String getProximalPoint(String point1, String point2, Map<String,List<Object>> points) {
+    private String getProximalPoint(String point1, String point2, Map<String,List<Object>> points) {
         double x1 = new Double(0), x2 = new Double(0);
         double y1 = new Double(0), y2 = new Double(0);
         double z1 = new Double(0), z2 = new Double(0);

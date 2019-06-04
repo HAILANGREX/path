@@ -75,45 +75,7 @@ public class GraphService {
         }
     }
 
-    public GraphService(List<Integer> relationList,List<Double> poinList)
-    {
-        poiInMap = setPoiInMap(poinList);
-        relation = getRelationList(relationList);
-        this.vertices = new HashMap<>();
-        setDijkStraMap(relation);
 
-    }
-
-
-    public void putInString(String line)
-    {
-        String[] sett = line.replace("[","").replace("]","").split(",");
-
-        for(int i =0;i<sett.length;i+=6)
-        {
-            vertexpoi v1 = new vertexpoi();
-            vertexpoi v2 = new vertexpoi();
-            v1.setX(Double.parseDouble(sett[i]));
-            v1.setY(Double.parseDouble(sett[i+1]));
-            v1.setZ(Double.parseDouble(sett[i+2]));
-            if (!poiInMap.contains(v1))
-            {
-                poiInMap.add(v1);
-            }
-            v2.setX(Double.parseDouble(sett[i+3]));
-            v2.setY(Double.parseDouble(sett[i+4]));
-            v2.setZ(Double.parseDouble(sett[i+5]));
-            if (!poiInMap.contains(v2))
-            {
-                poiInMap.add(v2);
-            }
-            rela.add(poiInMap.indexOf(v1));
-            rela.add(poiInMap.indexOf(v2));
-        }
-        relation = getRelationList(rela);
-        this.vertices = new HashMap<Integer, List<Vertex>>();
-        setDijkStraMap(relation);
-    }
 
 
     /**
@@ -169,7 +131,7 @@ public class GraphService {
         }
     }
 
-    public Double getDistance(Integer point1,Integer point2)
+    private Double getDistance(Integer point1,Integer point2)
     {
         return getDistance(poiInMap.get(point1), poiInMap.get(point2));
     }
@@ -184,27 +146,7 @@ public class GraphService {
 
     private  Map<Integer, List<Vertex>> vertices;
 
-    public List<Vertex> getVertices(Integer i)
-    {
-        return vertices.get(i);
-    }
 
-    public Integer getMinDistance(vertexpoi vertex1){
-        int point = 0;
-        double z = 3250;
-        double distance = Double.POSITIVE_INFINITY;
-        for (int i = 0; i< poiInMap.size(); i++)
-        {
-            if(vertex1.getZ()<= poiInMap.get(i).getZ()+z&&vertex1.getZ()>= poiInMap.get(i).getZ()-z) {
-                double dis = getDistance(vertex1, poiInMap.get(i));
-                if (dis < distance) {
-                    distance = dis;
-                    point = i;
-                }
-            }
-        }
-        return point;
-    }
 
 
     /**
@@ -214,14 +156,14 @@ public class GraphService {
     * @Author: Wang
     * @Date: 2019/3/25
     */
-    public List<Vertex> setVertexList(Map<Integer,Double> connect){
+    private List<Vertex> setVertexList(Map<Integer,Double> connect){
         List<Vertex> vertec = new ArrayList<>();
         for (Integer ve:connect.keySet()){
             vertec.add(new Vertex(ve,connect.get(ve)));
         }
         return vertec;
     }
-    public List<Vertex> setVertexList(Integer point){
+    private List<Vertex> setVertexList(Integer point){
         List<Vertex> vertec = new ArrayList<>();
         Map<Integer,Double> connect = getDisByPoint(point);
         vertec = setVertexList(connect);
@@ -232,32 +174,13 @@ public class GraphService {
         this.vertices = new HashMap<Integer, List<Vertex>>();
     }
 
-    public void addVertex(Integer Integer, List<Vertex> vertex) {
+    private void addVertex(Integer Integer, List<Vertex> vertex) {
         if (this.vertices.get(Integer) != null)
             this.vertices.get(Integer).addAll(vertex);
         this.vertices.put(Integer, vertex);
     }
 
-    public  List<List<List<Double>>> getPointPath(List<Integer> path)
-    {
-        List<List<List<Double>>> pointPathresult = new ArrayList<>();
-        for (int i= 0;i<path.size()-1;i++)
-        {
-            List<List<Double>> pointPath = new ArrayList<>();
-            List<Double> point1 = new ArrayList<>();
-            List<Double> point2 = new ArrayList<>();
-            point1.add(poiInMap.get(path.get(i)).getX());
-            point1.add(poiInMap.get(path.get(i)).getY());
-            point1.add(poiInMap.get(path.get(i)).getZ());
-            point2.add(poiInMap.get(path.get(i+1)).getX());
-            point2.add(poiInMap.get(path.get(i+1)).getY());
-            point2.add(poiInMap.get(path.get(i+1)).getZ());
-            pointPath.add(point1);
-            pointPath.add(point2);
-            pointPathresult.add(pointPath);
-        }
-        return pointPathresult;
-    }
+
 
     public List<Integer> getShortestPath(Integer start, Integer finish) {
         final Map<Integer, Integer> distances = new HashMap<Integer, Integer>();
@@ -314,38 +237,6 @@ public class GraphService {
         return new ArrayList<Integer>();
     }
 
-//    public List<List<List<Double>>> inPutPoint(String point1,String point2)
-//    {
-//        final double startTime = System.nanoTime();
-//        statu = 0;
-//        String[] sett = point1.replace("[","").replace("]","").split(",");
-//        String[] set = point2.replace("[","").replace("]","").split(",");
-//        if(sett.length != 3||set.length !=3)
-//        {
-//            statu = 2;
-//            List<List<List<Double>>> patht = new ArrayList<>();
-//            return patht;
-//        }
-//        vertexpoi v1 = new vertexpoi();
-//        vertexpoi v2 = new vertexpoi();
-//        v1.setX(Double.parseDouble(sett[0]));
-//        v1.setY(Double.parseDouble(sett[1]));
-//        v1.setZ(Double.parseDouble(sett[2]));
-//        v2.setX(Double.parseDouble(set[0]));
-//        v2.setY(Double.parseDouble(set[1]));
-//        v2.setZ(Double.parseDouble(set[2]));
-//        this.putInString(this.getRoad("road"));
-//        int p1= this.getMinDistance(v1);
-//        int p2= this.getMinDistance(v2);
-//        if(p1 ==p2)
-//        {
-//            statu = 1;
-//        }
-//        final double getOutlineEndTime = System.nanoTime();
-//        LOGGER.info(String.format("拓扑最短路径提取完成！共耗时 %.2f 秒。",
-//                (getOutlineEndTime - startTime) / 1.E9));
-//        return this.getPointPath(this.getShortestPath(p1,p2));
-//    }
 
     public int getStatu() {
         return statu;
@@ -355,14 +246,4 @@ public class GraphService {
         this.statu = statu;
     }
 
-//    public String getRoad(String key) {
-//        Optional<BosRoad> f = roadRepo.findByKey(key);
-//        if (f.isPresent()) {
-//            BosRoad file = f.get();
-//            return file.getRoad();
-//        }
-//        else {
-//            return null;
-//        }
-//    }
 }
