@@ -49,10 +49,8 @@ public class GridPathService {
 
     public List<String> getgrids(String model)
     {
-
-        Iterable<BosGrids> byModelAndPathNotNull = bosGridsRepo.findByModelAndPathNotNull(model);
         List<String> fileList = new ArrayList<String>();
-        for (BosGrids bosGrids1 : byModelAndPathNotNull) {
+        for (BosGrids bosGrids1 : bosGrids) {
             fileList.add(bosGrids1.getPath());
         }
        return fileList;
@@ -516,8 +514,7 @@ public class GridPathService {
     * @Date: 2019/3/25
     */
     private  void getGrids(String filekey){
-        Iterable<BosGrids> grids =  bosGridsRepo.findByModelAndPathNotNull(filekey);
-        for(BosGrids bosGrid:grids)
+        for(BosGrids bosGrid:bosGrids)
         {
             gridsMap.put(bosGrid.getGridSettings().getHeight(),bosGrid);
         }
