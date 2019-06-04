@@ -23,6 +23,10 @@ public class GridPathService {
     private List<Map<String,Object>> stairGrids = new ArrayList<>(); //初始化stairGrids参数
     private List<BosStairGrid> bosStairGrids = new ArrayList<>(); //初始化解析获取的stairGrids
 
+    private List<Map<String,Object>> grids = new ArrayList<>(); //初始化解析获取的stairGrids
+    private List<BosGrids> bosGrids = new ArrayList<>(); //初始化解析获取的bosGrids
+
+
     private BosStairGridRepository bosStairGridRepo;
     private BosGridsRepository bosGridsRepo;
 
@@ -34,8 +38,7 @@ public class GridPathService {
     * @Date: 2019/3/25
     */
     private void getStair(String filekey){
-        Iterable<BosStairGrid>  grids=  bosStairGridRepo.findByModel(filekey);
-        for(BosStairGrid stair:grids)
+        for(BosStairGrid stair:bosStairGrids)
         {
             this.putStairsconnect(stair.getStartheight(),stair.getEndheight());
             this.putStairsconnect(stair.getEndheight(),stair.getStartheight());
@@ -588,6 +591,27 @@ public class GridPathService {
             entranc.setY(Integer.parseInt(endgrid.get("y").toString()));
             bosStairGrid.setEndgrid(entranc);
             bosStairGrids.add(bosStairGrid);
+        }
+    }
+
+    public void getGrids(){
+        for(Map<String,Object> map : grids){
+            BosGrids bosGrid = new BosGrids();
+            GridSettings gridSettings = new GridSettings();
+            Map<String,Object> gridSettingMap = (Map<String, Object>) map.get("gridSettings");
+            gridSettings.setGridHeight(Double.parseDouble(gridSettingMap.get("gridHeight").toString()));
+            gridSettings.setCol(Integer.parseInt(gridSettingMap.get("col").toString()));
+            gridSettings.setUnit(gridSettingMap.get("unit").toString());
+            gridSettings.setX(Double.parseDouble(gridSettingMap.get("x").toString()));
+            gridSettings.setY(Double.parseDouble(gridSettingMap.get("y").toString()));
+            gridSettings.setRow(Integer.parseInt(gridSettingMap.get("row").toString()));
+            gridSettings.setGridWidth(Double.parseDouble(gridSettingMap.get("gridWidth").toString()));
+            gridSettings.setStatus(gridSettingMap.get("status").toString());
+            gridSettings.setHeight(Double.parseDouble(gridSettingMap.get("height").toString()));
+            bosGrid.setGridSettings(gridSettings);
+            bosGrid.setPath(gridSettingMap.get("path").toString());
+            bosGrid.setModel(gridSettingMap.get("model").toString());
+            bosGrids.add(bosGrid);
         }
     }
 

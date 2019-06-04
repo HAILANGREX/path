@@ -16,3 +16,4 @@
 /src/main/java/META-INF/
 !/src/main/resources/ifcengine.properties
 /indexDir/
+/pathService.iml
