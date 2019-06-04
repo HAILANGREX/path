@@ -370,27 +370,28 @@ public class HybridPathService {
 
         geoPath = geoPaths;
         this.getGrids(grids);                                             //存储不同高度的栅格
+
         Double h1 = this.getShortestFloor(vertexpoi1.getZ(), unit);
         Double h2 = this.getShortestFloor(vertexpoi2.getZ(), unit);
 
         Map<Double, List<String>> pointsbyhigh = new HashMap<>();          //按高度存储拓扑点
         Map<String, vertexpoi> pointsbykey = new HashMap<>();
 
-        Iterable<BosPoint> allByRoute = pointRepo.findAllByRoute(route);
-        for (BosPoint bosPoint : allByRoute) {
+
+        for (String key : points.keySet()) {
             vertexpoi vertexpoi = new vertexpoi();
-            vertexpoi.setX(bosPoint.getX());
-            vertexpoi.setY(bosPoint.getY());
-            vertexpoi.setZ(bosPoint.getZ());
-            Double high = bosPoint.getZ();
+            vertexpoi.setX(points.get(key).get(0));
+            vertexpoi.setY(points.get(key).get(1));
+            vertexpoi.setZ(points.get(key).get(2));
+            Double high = points.get(key).get(2);
             if (pointsbyhigh.containsKey(high)) {
-                pointsbyhigh.get(high).add(bosPoint.getKey());
-                pointsbykey.put(bosPoint.getKey(), vertexpoi);
+                pointsbyhigh.get(high).add(key);
+                pointsbykey.put(key, vertexpoi);
             } else {
                 List<String> vertexpoiList = new ArrayList<>();
-                vertexpoiList.add(bosPoint.getKey());
+                vertexpoiList.add(key);
                 pointsbyhigh.put(high, vertexpoiList);
-                pointsbykey.put(bosPoint.getKey(), vertexpoi);
+                pointsbykey.put(key, vertexpoi);
             }
         }
 
@@ -462,14 +463,8 @@ public class HybridPathService {
             final double path2Time = System.nanoTime();
             double slicingTime2 = (path2Time - path1Time) / 1.E9;
 
-            Iterable<BosEdge> edgesByRouteId = edgeRepo.findAllByRoute(route);
-            List<String> list = new ArrayList<String>();
-            for (BosEdge bosEdge : edgesByRouteId) {
-                list.add(bosEdge.getFrom());
-                list.add(bosEdge.getTo());
-                list.add(bosEdge.getDistance());
-            }
-            GraphService graphService = new GraphService(String.join(",", list));
+
+            GraphService graphService = new GraphService(String.join(",", relationlist));
             List<Integer> shortestPath = graphService.getShortestPath(Integer.parseInt(starkey), Integer.parseInt(endkey));
             if (shortestPath.size() == 0) {
                 throw new PathExceptions("未能查询到拓扑可通路径");
@@ -477,12 +472,12 @@ public class HybridPathService {
 
             List<vertexpoi> medpath = new ArrayList<>();                              //中间路径
             for (Integer integer : shortestPath) {
-                Optional<BosPoint> byId = pointRepo.findByKey(integer.toString());
-                if (byId.isPresent()) {
+                List<Double> pathpoint  = points.get(integer.toString());
+                if (pathpoint.size()!=0) {
                     vertexpoi vertexpoi = new vertexpoi();
-                    vertexpoi.setX(byId.get().getX());
-                    vertexpoi.setY(byId.get().getY());
-                    vertexpoi.setZ(byId.get().getZ());
+                    vertexpoi.setX(pathpoint.get(0));
+                    vertexpoi.setY(pathpoint.get(1));
+                    vertexpoi.setZ(pathpoint.get(2));
                     medpath.add(vertexpoi);
                 }
             }
