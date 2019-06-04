@@ -42,10 +42,10 @@ public class Test {
         List<List<Object>> topologyShortest = pathsService.getTopologyShortest(point1, point2, edgeList, pointMap);
         System.out.println(topologyShortest);
 
-//        List<vertexpoi> hybridShortest = pathsService.getHybridShortest(point1, point2, edgeList, pointMap, geoMap, grids, unit);
-//        System.out.println(hybridShortest);
+        List<Object> hybridShortest = pathsService.getHybridShortest(point1, point2, edgeList, pointMap, geoMap, grids, unit);
+        System.out.println(hybridShortest);
 
-//        List<vertexpoi> gridShortest = pathsService.getGridShortest(point1, point2, stairGrids, geoMap, grids, unit);
-//        System.out.println(gridShortest);
+        List<Object> gridShortest = pathsService.getGridShortest(point1, point2, stairGrids, geoMap, grids, unit);
+        System.out.println(gridShortest);
     }
 }

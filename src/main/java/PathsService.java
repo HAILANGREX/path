@@ -19,12 +19,21 @@ public class PathsService {
     * @Date: 2019/6/3
     */
 
-    public List<vertexpoi> getHybridShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points,Map<String,InputStream> geoPaths, List<Map<String,Object>> grids, String unit) throws IOException {
+    public List<Object> getHybridShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points,Map<String,InputStream> geoPaths, List<Map<String,Object>> grids, String unit) throws IOException {
 
         List<vertexpoi> vertexpoiList = new ArrayList<>();
+        List<Object> objectList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
         vertexpoiList=hybridPathService.getHybridShortest(point1,point2,relationlist,points,geoPaths,grids,unit);
-        return vertexpoiList;
+        for (vertexpoi vertexpoi:vertexpoiList)
+        {
+            List<Double> list = new ArrayList<>();
+            list.add(vertexpoi.getX());
+            list.add(vertexpoi.getY());
+            list.add(vertexpoi.getZ());
+            objectList.add(list);
+        }
+        return objectList;
     }
     /**
     * @Description: 获取栅格路网的最短路基方法
@@ -34,12 +43,22 @@ public class PathsService {
     * @Date: 2019/6/3
     */
 
-    public  List<vertexpoi> getGridShortest(String point1, String point2, List<Map<String,Object>> stairGrids,
+    public  List<Object> getGridShortest(String point1, String point2, List<Map<String,Object>> stairGrids,
                                             Map<String,InputStream> geoPaths, List<Map<String,Object>> grids, String unit) throws IOException {
         List<vertexpoi> vertexpoiList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
+        List<Object> objectList = new ArrayList<>();
         vertexpoiList=hybridPathService.gridShortest(point1, point2, stairGrids, geoPaths, grids, unit);
-        return vertexpoiList;
+        for (vertexpoi vertexpoi:vertexpoiList)
+        {
+            List<Double> list = new ArrayList<>();
+            list.add(vertexpoi.getX());
+            list.add(vertexpoi.getY());
+            list.add(vertexpoi.getZ());
+            objectList.add(list);
+        }
+        return objectList;
+
     }
 
     /** 
