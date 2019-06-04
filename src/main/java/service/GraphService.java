@@ -30,14 +30,14 @@ public class GraphService {
     }
 
     private Map<Integer,Map<Integer,Double>> relAndDis = new HashMap<>();
-    /**
+    /** 
     * @Description:  关系与距离数据传入
-    * @Param: [data]
-    * @return: void
-    * @Author: Mr.Wang
-    * @Date: 2019/3/25
+    * @Param: [data] 
+    * @return: void 
+    * @Author: Mr.Wang 
+    * @Date: 2019/3/25 
     */
-    private void inPutRelAndDis(String data)
+    public void inPutRelAndDis(String data)
     {
         String[] sett = data.replace("[","").replace("]","").replace("\"","").split(",");
 
@@ -75,7 +75,7 @@ public class GraphService {
         }
     }
 
-    private GraphService(List<Integer> relationList,List<Double> poinList)
+    public GraphService(List<Integer> relationList,List<Double> poinList)
     {
         poiInMap = setPoiInMap(poinList);
         relation = getRelationList(relationList);
@@ -85,6 +85,35 @@ public class GraphService {
     }
 
 
+    public void putInString(String line)
+    {
+        String[] sett = line.replace("[","").replace("]","").split(",");
+
+        for(int i =0;i<sett.length;i+=6)
+        {
+            vertexpoi v1 = new vertexpoi();
+            vertexpoi v2 = new vertexpoi();
+            v1.setX(Double.parseDouble(sett[i]));
+            v1.setY(Double.parseDouble(sett[i+1]));
+            v1.setZ(Double.parseDouble(sett[i+2]));
+            if (!poiInMap.contains(v1))
+            {
+                poiInMap.add(v1);
+            }
+            v2.setX(Double.parseDouble(sett[i+3]));
+            v2.setY(Double.parseDouble(sett[i+4]));
+            v2.setZ(Double.parseDouble(sett[i+5]));
+            if (!poiInMap.contains(v2))
+            {
+                poiInMap.add(v2);
+            }
+            rela.add(poiInMap.indexOf(v1));
+            rela.add(poiInMap.indexOf(v2));
+        }
+        relation = getRelationList(rela);
+        this.vertices = new HashMap<Integer, List<Vertex>>();
+        setDijkStraMap(relation);
+    }
 
 
     /**
@@ -140,7 +169,7 @@ public class GraphService {
         }
     }
 
-    private Double getDistance(Integer point1,Integer point2)
+    public Double getDistance(Integer point1,Integer point2)
     {
         return getDistance(poiInMap.get(point1), poiInMap.get(point2));
     }
@@ -185,23 +214,25 @@ public class GraphService {
     * @Author: Wang
     * @Date: 2019/3/25
     */
-    private List<Vertex> setVertexList(Map<Integer,Double> connect){
+    public List<Vertex> setVertexList(Map<Integer,Double> connect){
         List<Vertex> vertec = new ArrayList<>();
         for (Integer ve:connect.keySet()){
             vertec.add(new Vertex(ve,connect.get(ve)));
         }
         return vertec;
     }
-    private List<Vertex> setVertexList(Integer point){
+    public List<Vertex> setVertexList(Integer point){
         List<Vertex> vertec = new ArrayList<>();
         Map<Integer,Double> connect = getDisByPoint(point);
         vertec = setVertexList(connect);
         return vertec;
     }
 
+    public GraphService() {
+        this.vertices = new HashMap<Integer, List<Vertex>>();
+    }
 
-
-    private void addVertex(Integer Integer, List<Vertex> vertex) {
+    public void addVertex(Integer Integer, List<Vertex> vertex) {
         if (this.vertices.get(Integer) != null)
             this.vertices.get(Integer).addAll(vertex);
         this.vertices.put(Integer, vertex);

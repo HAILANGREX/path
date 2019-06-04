@@ -181,7 +181,7 @@ public class HybridPathService {
     * @Date: 2019/6/4
     */
 
-    public List<List<Double>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points) {
+    public List<List<Object>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points) {
         final double startTime = System.nanoTime();
         String proximalPoint = getProximalPoint(point1, point2, points);
         if ("".equals(proximalPoint)) {
@@ -201,9 +201,8 @@ public class HybridPathService {
             statu = 3;
             return null;
         }
-        List<List<Double>> list1 = null;
+        List<List<Object>> list1 = new ArrayList<>();
         for (int i = 0; i < shortestPath.size() - 1; i++) {
-            list1 = new ArrayList<>();
             list1.add(points.get(shortestPath.get(i).toString()));
         }
         final double getOutlineEndTime = System.nanoTime();
@@ -213,7 +212,7 @@ public class HybridPathService {
     }
 
 
-    private String getProximalPoint(String point1, String point2, Map<String,List<Double>> points) {
+    public String getProximalPoint(String point1, String point2, Map<String,List<Object>> points) {
         double x1 = new Double(0), x2 = new Double(0);
         double y1 = new Double(0), y2 = new Double(0);
         double z1 = new Double(0), z2 = new Double(0);
@@ -230,15 +229,15 @@ public class HybridPathService {
         Map<Double, String> treeMap1 = new TreeMap<Double, String>();
         Map<Double, String> treeMap2 = new TreeMap<Double, String>();
         for (String key : points.keySet()) {
-            List<Double> v2 = points.get(key);
-            //求出两个点之间的距离
-            double distance1 = Math.sqrt((x1 - v2.get(0)) * (x1 - v2.get(0)) + ((y1 - v2.get(1)) * (y1 - v2.get(1))) + (z1 - v2.get(2)) * (z1 - v2.get(2)));
+            List<Object> v2 = points.get(key);
+            //求出两个点之间的距离 \
+            double distance1 = Math.sqrt((x1 - Double.parseDouble(v2.get(0).toString())) * (x1 - Double.parseDouble(v2.get(0).toString())) + ((y1 - Double.parseDouble(v2.get(1).toString())) * (y1 - Double.parseDouble(v2.get(1).toString())) + (z1 - Double.parseDouble(v2.get(2).toString())) * (z1 - Double.parseDouble(v2.get(2).toString()))));
             //保留三位小数
             distance1 = (double) Math.round(distance1 * 1000) / 1000;
             treeMap1.put(distance1, key);
 
             //求出两个点之间的距离
-            double distance2 = Math.sqrt((x2 - v2.get(0)) * (x2 - v2.get(0)) + ((y2 - v2.get(1)) * (y2 - v2.get(1))) + (z2 - v2.get(2)) * (z2 - v2.get(2)));
+            double distance2 = Math.sqrt((x2 - Double.parseDouble(v2.get(0).toString())) * (x2 - Double.parseDouble(v2.get(0).toString())) + ((y2 - Double.parseDouble(v2.get(1).toString())) * (y2 - Double.parseDouble(v2.get(1).toString())) + (z2 - Double.parseDouble(v2.get(2).toString())) * (z2 - Double.parseDouble(v2.get(2).toString()))));
             //保留三位小数
             distance2 = (double) Math.round(distance2 * 1000) / 1000;
             treeMap2.put(distance2, key);
@@ -350,7 +349,7 @@ public class HybridPathService {
     }
 
     //混合路网获取最短路径
-    public List<vertexpoi> getHybridShortest(String point1, String point2,List<String> relationlist,Map<String,List<Double>> points, Map<String,InputStream> geoPaths,List<Map<String,Object>> grids,String unit) throws IOException {
+    public List<vertexpoi> getHybridShortest(String point1, String point2,List<String> relationlist,Map<String,List<Object>> points, Map<String,InputStream> geoPaths,List<Map<String,Object>> grids,String unit) throws IOException {
         String[] split1 = point1.split(",");
         String[] split2 = point2.split(",");
         if (split1.length != 3 || split2.length != 3) {
@@ -380,10 +379,10 @@ public class HybridPathService {
 
         for (String key : points.keySet()) {
             vertexpoi vertexpoi = new vertexpoi();
-            vertexpoi.setX(points.get(key).get(0));
-            vertexpoi.setY(points.get(key).get(1));
-            vertexpoi.setZ(points.get(key).get(2));
-            Double high = points.get(key).get(2);
+            vertexpoi.setX(Double.parseDouble(points.get(key).get(0).toString()));
+            vertexpoi.setY(Double.parseDouble(points.get(key).get(1).toString()));
+            vertexpoi.setZ(Double.parseDouble(points.get(key).get(2).toString()));
+            Double high = Double.parseDouble(points.get(key).get(2).toString());
             if (pointsbyhigh.containsKey(high)) {
                 pointsbyhigh.get(high).add(key);
                 pointsbykey.put(key, vertexpoi);
@@ -472,12 +471,12 @@ public class HybridPathService {
 
             List<vertexpoi> medpath = new ArrayList<>();                              //中间路径
             for (Integer integer : shortestPath) {
-                List<Double> pathpoint  = points.get(integer.toString());
+                List<Object> pathpoint  = points.get(integer.toString());
                 if (pathpoint.size()!=0) {
                     vertexpoi vertexpoi = new vertexpoi();
-                    vertexpoi.setX(pathpoint.get(0));
-                    vertexpoi.setY(pathpoint.get(1));
-                    vertexpoi.setZ(pathpoint.get(2));
+                    vertexpoi.setX(Double.parseDouble(pathpoint.get(0).toString()));
+                    vertexpoi.setY(Double.parseDouble(pathpoint.get(1).toString()));
+                    vertexpoi.setZ(Double.parseDouble(pathpoint.get(2).toString()));
                     medpath.add(vertexpoi);
                 }
             }

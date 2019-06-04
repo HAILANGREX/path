@@ -367,7 +367,7 @@ public class GridPathService {
         }
     }
 
-    private List<Vertex> setVertexList(List<Integer> connect){
+    public List<Vertex> setVertexList(List<Integer> connect){
         List<Vertex> vertec = new ArrayList<>();
         for (Integer ve:connect){
             Vertex vertex =  new Vertex(ve,1);
@@ -377,11 +377,11 @@ public class GridPathService {
         return vertec;
     }
 
-    private void addVertex(Integer character, List<Vertex> vertex) {
+    public void addVertex(Integer character, List<Vertex> vertex) {
         this.vertices.put(character, vertex);
     }
 
-    private List<Integer> getShortestPath(Integer start, Integer finish) {
+    public List<Integer> getShortestPath(Integer start, Integer finish) {
         final Map<Integer, Integer> distances = new HashMap<Integer, Integer>();
         final Map<Integer, Vertex> previous = new HashMap<Integer, Vertex>();
         PriorityQueue<Vertex> nodes = new PriorityQueue<Vertex>();
@@ -438,7 +438,7 @@ public class GridPathService {
     * @Author: Wang
     * @Date: 2019/3/25
     */
-    private Double getShortestFloor(double poi,String unit){
+    public Double getShortestFloor(double poi,String unit){
         Double min=Double.POSITIVE_INFINITY ;
         Double high = Double.POSITIVE_INFINITY;
         for(Double h:gridsMap.keySet())
@@ -516,7 +516,7 @@ public class GridPathService {
     * @Author: Wang
     * @Date: 2019/3/25
     */
-    private   int[][] getCsvDataNew(InputStream inputStream) throws IOException {
+    public  int[][] getCsvDataNew(InputStream inputStream) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
         String line = "";
         ArrayList<int[]> lineList = new ArrayList<int[]>();
@@ -547,7 +547,7 @@ public class GridPathService {
     /**
      * 初始化楼梯连接参数
      */
-    private void getBosStairGrid(List<Map<String,Object>> stairGrids){
+    public void getBosStairGrid(List<Map<String,Object>> stairGrids){
         for(Map<String,Object> map : stairGrids){
             BosStairGrid bosStairGrid = new BosStairGrid();
             bosStairGrid.setModel(map.get("model").toString());
@@ -583,7 +583,7 @@ public class GridPathService {
     /**
      * 获取Grids数据
      */
-    private void getGrids(List<Map<String,Object>> grids){
+    public void getGrids(List<Map<String,Object>> grids){
         for(Map<String,Object> map : grids){
             BosGrids bosGrid = new BosGrids();
             GridSettings gridSettings = new GridSettings();
@@ -614,7 +614,7 @@ public class GridPathService {
      * @param str
      * @return
      */
-    private BosStairGrid getBosStairGrid(Integer minfloor ,Integer maxfloor,Integer x,Integer y,String str){
+    public BosStairGrid getBosStairGrid(Integer minfloor ,Integer maxfloor,Integer x,Integer y,String str){
         for(BosStairGrid bosStairGrid : bosStairGrids){
             switch (str){
                 case "start":

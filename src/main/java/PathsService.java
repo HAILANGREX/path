@@ -19,7 +19,7 @@ public class PathsService {
     * @Date: 2019/6/3
     */
 
-    public List<vertexpoi> getHybridShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points,Map<String,InputStream> geoPaths, List<Map<String,Object>> grids, String unit) throws IOException {
+    public List<vertexpoi> getHybridShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points,Map<String,InputStream> geoPaths, List<Map<String,Object>> grids, String unit) throws IOException {
 
         List<vertexpoi> vertexpoiList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
@@ -50,8 +50,8 @@ public class PathsService {
     * @Date: 2019/6/3 
     */ 
     
-    public  List<List<Double>> getTopologyShortest(String point1, String point2, List<String> relationlist,Map<String,List<Double>> points){
-        List<List<Double>> vertexpoiList = new ArrayList<>();
+    public  List<List<Object>> getTopologyShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points){
+        List<List<Object>> vertexpoiList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
         vertexpoiList=hybridPathService.getShortest(point1, point2, relationlist,points);
         return vertexpoiList;
