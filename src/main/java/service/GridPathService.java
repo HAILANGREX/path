@@ -1,15 +1,8 @@
 package service;
 
-
 import entity.*;
-
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
-
 
 public class GridPathService {
 
@@ -21,9 +14,10 @@ public class GridPathService {
     private List<vertexpoi> gridPathOverFloor = new ArrayList<>();  //最终的输出路径
 
     private List<BosStairGrid> bosStairGrids = new ArrayList<>(); //初始化解析获取的stairGrids
+    private Map<String,InputStream> geoMap = new HashMap<>(); //路网文件流数据
 
-    private BosStairGridRepository bosStairGridRepo;
-    private BosGridsRepository bosGridsRepo;
+//    private BosStairGridRepository bosStairGridRepo;
+//    private BosGridsRepository bosGridsRepo;
 
     /**
     * @Description: 获取所有楼层之间的联系
@@ -32,7 +26,7 @@ public class GridPathService {
     * @Author: Wang
     * @Date: 2019/3/25
     */
-    private void getStair(String filekey){
+    private void getStair(){
         for(BosStairGrid stair:bosStairGrids)
         {
             this.putStairsconnect(stair.getStartheight(),stair.getEndheight());
@@ -51,9 +45,9 @@ public class GridPathService {
 //       return fileList;
 //    }
 
-    public void setGridPath(String modelkey,vertexpoi poi1,vertexpoi poi2,String unit) throws IOException,PathExceptions {
-        this.getGrids(modelkey);
-        this.getStair(modelkey);
+    public void setGridPath(vertexpoi poi1,vertexpoi poi2,String unit) throws IOException,PathExceptions {
+//        this.getGrids(modelkey);
+        this.getStair();
         this.setDijkStraMap(stairsConnect);
         Double h1 = this.getShortestFloor(poi1.getZ(),unit);
         Double h2 = this.getShortestFloor(poi2.getZ(),unit);
@@ -83,7 +77,7 @@ public class GridPathService {
             if(floorPath.isEmpty()||floorPath.size()==1){
                 throw new PathExceptions("无楼层连接关系");
             }
-            this.getPathOverFloor(e1,e2,modelkey);
+            this.getPathOverFloor(e1,e2);
         }
     }
 
@@ -158,7 +152,7 @@ public class GridPathService {
     */
     private List<vertexpoi> getPathInFloor (Entrance e1,Entrance e2,Double floorHigh) throws IOException,PathExceptions {
         List<vertexpoi> path = new ArrayList<>();
-        InputStream is =  FastDFS.downloadFileAsStream(gridsMap.get(floorHigh).getPath());
+        InputStream is =  geoMap.get(gridsMap.get(floorHigh).getPath());
         int[][] gridmap =  this.getCsvDataNew(is);
 
         int a=gridmap[e1.getY()][e1.getX()];
@@ -230,7 +224,7 @@ public class GridPathService {
     * @Author: Mr.Wang
     * @Date: 2019/3/25
     */
-    private void getPathOverFloor(Entrance star,Entrance end,String filekey) throws IOException {
+    private void getPathOverFloor(Entrance star,Entrance end) throws IOException {
         Entrance inter =new Entrance();
         Entrance inter2 = new Entrance();
 
@@ -258,7 +252,7 @@ public class GridPathService {
                 minfloor = floorPath.get(i);
                 maxfloor =floorPath.get(i+1);
 
-                BosStairGrid bosStairGrids = this.getBosStairGrid(filekey,minfloor,maxfloor,inter.getX(),inter.getY(),"start");
+                BosStairGrid bosStairGrids = this.getBosStairGrid(minfloor,maxfloor,inter.getX(),inter.getY(),"start");
                 if(null != bosStairGrids){
                     gridPathOverFloor.addAll(bosStairGrids.getXyzlist());
                     inter2 =bosStairGrids.getEndgrid();
@@ -268,7 +262,7 @@ public class GridPathService {
             else {
                 maxfloor = floorPath.get(i);
                 minfloor =floorPath.get(i+1);
-                BosStairGrid bosStairGrids = this.getBosStairGrid(filekey,minfloor,maxfloor,inter.getX(),inter.getY(),"end");
+                BosStairGrid bosStairGrids = this.getBosStairGrid(minfloor,maxfloor,inter.getX(),inter.getY(),"end");
                 if(null != bosStairGrids){
                     List<vertexpoi> path1 = bosStairGrids.getXyzlist();
                     Collections.reverse(path1);
@@ -358,10 +352,11 @@ public class GridPathService {
     private final Map<Integer, List<Vertex>> vertices;
     private List<Integer> floorPath = new ArrayList<>();
 
-    public GridPathService(BosStairGridRepository bosStairGridRepository,BosGridsRepository bosGridsRepository){
+    public GridPathService(List<Map<String,Object>> stairGrids, Map<String,InputStream> geoPaths, List<Map<String,Object>> grids){
         this.vertices = new HashMap<Integer, List<Vertex>>();
-        this.bosStairGridRepo = bosStairGridRepository;
-        this.bosGridsRepo = bosGridsRepository;
+        getGrids(grids);
+        geoMap = geoPaths;
+        getBosStairGrid(stairGrids);
     }
 
     private void setDijkStraMap(Map<Integer, List<Integer>> stairsconnect){
@@ -370,7 +365,6 @@ public class GridPathService {
 
             this.addVertex(key,setVertexList(stairsconnect.get(key)));
         }
-
     }
 
     public List<Vertex> setVertexList(List<Integer> connect){
@@ -501,19 +495,19 @@ public class GridPathService {
         }
     }
 
-    /**
-    * @Description: 根据用户的输入点返回查询到的合适栅格数据
-    * @Param: [filekey]
-    * @return: void
-    * @Author: Wang
-    * @Date: 2019/3/25
-    */
-    private  void getGrids(String filekey){
-        for(BosGrids bosGrid:bosGrids)
-        {
-            gridsMap.put(bosGrid.getGridSettings().getHeight(),bosGrid);
-        }
-    }
+//    /**
+//    * @Description: 根据用户的输入点返回查询到的合适栅格数据
+//    * @Param: [filekey]
+//    * @return: void
+//    * @Author: Wang
+//    * @Date: 2019/3/25
+//    */
+//    private  void getGrids(String filekey){
+//        for(BosGrids bosGrid:bosGrids)
+//        {
+//            gridsMap.put(bosGrid.getGridSettings().getHeight(),bosGrid);
+//        }
+//    }
 
     /**
     * @Description: 将FASTDFS中的返回的栅格文件流读入生成二维数组图
@@ -620,13 +614,13 @@ public class GridPathService {
      * @param str
      * @return
      */
-    public BosStairGrid getBosStairGrid(String filekey,Integer minfloor ,Integer maxfloor,Integer x,Integer y,String str){
+    public BosStairGrid getBosStairGrid(Integer minfloor ,Integer maxfloor,Integer x,Integer y,String str){
         for(BosStairGrid bosStairGrid : bosStairGrids){
             switch (str){
                 case "start":
-                    return filekey.equals(bosStairGrid.getModel()) && minfloor == bosStairGrid.getStartheight() && maxfloor == bosStairGrid.getEndheight() && x == bosStairGrid.getStartgrid().getX() && y == bosStairGrid.getStartgrid().getY()?bosStairGrid:null;
+                    return minfloor == bosStairGrid.getStartheight() && maxfloor == bosStairGrid.getEndheight() && x == bosStairGrid.getStartgrid().getX() && y == bosStairGrid.getStartgrid().getY()?bosStairGrid:null;
                 case "end":
-                    return filekey.equals(bosStairGrid.getModel()) && minfloor == bosStairGrid.getStartheight() && maxfloor == bosStairGrid.getEndheight() && x == bosStairGrid.getEndgrid().getX() && y == bosStairGrid.getEndgrid().getY()?bosStairGrid:null;
+                    return minfloor == bosStairGrid.getStartheight() && maxfloor == bosStairGrid.getEndheight() && x == bosStairGrid.getEndgrid().getX() && y == bosStairGrid.getEndgrid().getY()?bosStairGrid:null;
                 default:break;
             }
         }

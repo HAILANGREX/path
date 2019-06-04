@@ -548,7 +548,8 @@ public class HybridPathService {
      * @param point2
      * @return
      */
-    public List<vertexpoi> gridShortest(String model, String point1, String point2) throws IOException {
+    public List<vertexpoi> gridShortest(String point1, String point2, List<Map<String,Object>> stairGrids,
+                                        Map<String,InputStream> geoPaths, List<Map<String,Object>> grids,String unit) throws IOException {
         final double startTime = System.nanoTime();
 
         String[] split1 = point1.split(",");
@@ -565,21 +566,16 @@ public class HybridPathService {
             vertexpoi2.setY(Double.parseDouble(split2[1]));
             vertexpoi2.setZ(Double.parseDouble(split2[2]));
 
-            GridPathService gridPathService = new GridPathService(bosStairGridRepo, bosGridsRepo);
+            GridPathService gridPathService = new GridPathService(stairGrids,geoPaths,grids);
 
-            Optional<BosUnit> bosUnit = bosUnitRepository.findByKey(model);
-            if (!bosUnit.isPresent() || bosUnit.get().getUnit() == null) {
-                throw new PathExceptions("单位未提取，请提取单位");
-            }
-            String unit = bosUnit.get().getUnit();
-            gridPathService.setGridPath(model, vertexpoi1, vertexpoi2, unit);
+            gridPathService.setGridPath(vertexpoi1, vertexpoi2, unit);
             List<vertexpoi> gridPathOverFloor = gridPathService.getGridPathOverFloor();
 
             System.out.println("最短路径点数=" + gridPathOverFloor.size());
 
             //提取计时
             final double getOutlineEndTime = System.nanoTime();
-            System.out.println(String.format(model + ":获取栅格地图最短路径完成！共耗时 %.2f 秒。",
+            System.out.println(String.format("获取栅格地图最短路径完成！共耗时 %.2f 秒。",
                     (getOutlineEndTime - startTime) / 1.E9));
 
             if (gridPathOverFloor.size() != 0)

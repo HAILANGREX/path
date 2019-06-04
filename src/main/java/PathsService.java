@@ -3,6 +3,8 @@ import entity.*;
 import service.GridService;
 import service.HybridPathService;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +34,11 @@ public class PathsService {
     * @Date: 2019/6/3
     */
 
-    public  List<vertexpoi> getGridShortest(){
+    public  List<vertexpoi> getGridShortest(String point1, String point2, List<Map<String,Object>> stairGrids,
+                                            Map<String,InputStream> geoPaths, List<Map<String,Object>> grids, String unit) throws IOException {
         List<vertexpoi> vertexpoiList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
-        vertexpoiList=hybridPathService.gridShortest();
+        vertexpoiList=hybridPathService.gridShortest(point1, point2, stairGrids, geoPaths, grids, unit);
         return vertexpoiList;
     }
 
