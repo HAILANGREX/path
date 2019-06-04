@@ -20,12 +20,7 @@ public class GridPathService {
     private Map<Integer,Map<String,List<Entrance>>> entranceInMap = new HashMap<>();   //每层楼的楼梯口
     private List<vertexpoi> gridPathOverFloor = new ArrayList<>();  //最终的输出路径
 
-    private List<Map<String,Object>> stairGrids = new ArrayList<>(); //初始化stairGrids参数
     private List<BosStairGrid> bosStairGrids = new ArrayList<>(); //初始化解析获取的stairGrids
-
-    private List<Map<String,Object>> grids = new ArrayList<>(); //初始化解析获取的stairGrids
-    private List<BosGrids> bosGrids = new ArrayList<>(); //初始化解析获取的bosGrids
-
 
     private BosStairGridRepository bosStairGridRepo;
     private BosGridsRepository bosGridsRepo;
@@ -47,14 +42,14 @@ public class GridPathService {
         }
     }
 
-    public List<String> getgrids(String model)
-    {
-        List<String> fileList = new ArrayList<String>();
-        for (BosGrids bosGrids1 : bosGrids) {
-            fileList.add(bosGrids1.getPath());
-        }
-       return fileList;
-    }
+//    public List<String> getgrids(String model)
+//    {
+//        List<String> fileList = new ArrayList<String>();
+//        for (BosGrids bosGrids1 : bosGrids) {
+//            fileList.add(bosGrids1.getPath());
+//        }
+//       return fileList;
+//    }
 
     public void setGridPath(String modelkey,vertexpoi poi1,vertexpoi poi2,String unit) throws IOException,PathExceptions {
         this.getGrids(modelkey);
@@ -558,7 +553,7 @@ public class GridPathService {
     /**
      * 初始化楼梯连接参数
      */
-    public void getBosStairGrid(){
+    public void getBosStairGrid(List<Map<String,Object>> stairGrids){
         for(Map<String,Object> map : stairGrids){
             BosStairGrid bosStairGrid = new BosStairGrid();
             bosStairGrid.setModel(map.get("model").toString());
@@ -591,7 +586,10 @@ public class GridPathService {
         }
     }
 
-    public void getGrids(){
+    /**
+     * 获取Grids数据
+     */
+    public void getGrids(List<Map<String,Object>> grids){
         for(Map<String,Object> map : grids){
             BosGrids bosGrid = new BosGrids();
             GridSettings gridSettings = new GridSettings();
@@ -606,9 +604,9 @@ public class GridPathService {
             gridSettings.setStatus(gridSettingMap.get("status").toString());
             gridSettings.setHeight(Double.parseDouble(gridSettingMap.get("height").toString()));
             bosGrid.setGridSettings(gridSettings);
-            bosGrid.setPath(gridSettingMap.get("path").toString());
-            bosGrid.setModel(gridSettingMap.get("model").toString());
-            bosGrids.add(bosGrid);
+            bosGrid.setPath(map.get("path").toString());
+            bosGrid.setModel(map.get("model").toString());
+            gridsMap.put(Double.parseDouble(gridSettingMap.get("height").toString()),bosGrid);
         }
     }
 
