@@ -1,8 +1,8 @@
-package service;
+package com.boswinner.service;
 
 
-import entity.Vertex;
-import entity.vertexpoi;
+import com.boswinner.entity.Vertex;
+import com.boswinner.entity.vertexpoi;
 
 
 import java.util.*;

@@ -1,5 +1,5 @@
-import com.alibaba.fastjson.JSON;
-import entity.vertexpoi;
+package com.boswinner;import com.alibaba.fastjson.JSON;
+import com.boswinner.entity.vertexpoi;
 import net.sf.json.JSONArray;
 
 import java.io.*;

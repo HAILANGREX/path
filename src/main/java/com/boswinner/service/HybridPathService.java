@@ -1,7 +1,7 @@
-package service;
+package com.boswinner.service;
 
 
-import entity.*;
+import com.boswinner.entity.*;
 
 import java.io.*;
 import java.util.*;

@@ -1,4 +1,4 @@
-package entity;
+package com.boswinner.entity;
 
 public class Node implements Comparable<Node>
 {

@@ -1,4 +1,4 @@
-package entity;
+package com.boswinner.entity;
 
 public class vertexpoi {
     private double x;

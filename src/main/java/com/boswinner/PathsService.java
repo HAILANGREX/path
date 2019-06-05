@@ -1,7 +1,7 @@
-import entity.*;
+package com.boswinner;import com.boswinner.entity.*;
 //import service.GridPathService;
-import service.GridService;
-import service.HybridPathService;
+import com.boswinner.service.GridService;
+import com.boswinner.service.HybridPathService;
 
 import java.io.IOException;
 import java.io.InputStream;

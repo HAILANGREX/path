@@ -1,4 +1,4 @@
-package entity;
+package com.boswinner.entity;
 
 public class Vertex implements Comparable<Vertex>{
     private Integer id;
