@@ -4,16 +4,7 @@ package service;
 import entity.*;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.text.DecimalFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-
 
 
 public class HybridPathService {
@@ -26,6 +17,7 @@ public class HybridPathService {
 
     private Map<Double, BosGrids> gridsMap = new HashMap<>();
     private Map<String,InputStream> geoPath = new HashMap<>();
+    private Map<String,InputStream> gridPaths = new HashMap<>();
 
     private int statu;
 
@@ -33,7 +25,7 @@ public class HybridPathService {
 
     private List<vertexpoi> getPathInFloor (Entrance e1,Entrance e2,Double floorHigh) throws IOException {
         List<vertexpoi> path = new ArrayList<>();
-        InputStream is =  geoPath.get(gridsMap.get(floorHigh).getPath());
+        InputStream is =  gridPaths.get(gridsMap.get(floorHigh).getPath());
         int[][] gridmap =  this.getCsvDataNew(is);
 
 
@@ -349,7 +341,7 @@ public class HybridPathService {
     }
 
     //混合路网获取最短路径
-    public List<vertexpoi> getHybridShortest(String point1, String point2,List<String> relationlist,Map<String,List<Object>> points, Map<String,InputStream> geoPaths,List<Map<String,Object>> grids,String unit) throws IOException {
+    public List<vertexpoi> getHybridShortest(String point1, String point2,List<String> relationlist,Map<String,List<Object>> points, Map<String,InputStream> gridPath,List<Map<String,Object>> grids,String unit) throws IOException {
         String[] split1 = point1.split(",");
         String[] split2 = point2.split(",");
         if (split1.length != 3 || split2.length != 3) {
@@ -367,7 +359,8 @@ public class HybridPathService {
         vertexpoi2.setY(Double.parseDouble(split2[1]));
         vertexpoi2.setZ(Double.parseDouble(split2[2]));
 
-        geoPath = geoPaths;
+        gridPaths = gridPath;
+        geoPath = gridPath;
         this.getGrids(grids);                                             //存储不同高度的栅格
 
         Double h1 = this.getShortestFloor(vertexpoi1.getZ(), unit);
@@ -543,7 +536,7 @@ public class HybridPathService {
      * @return
      */
     public List<vertexpoi> gridShortest(String point1, String point2, List<Map<String,Object>> stairGrids,
-                                        Map<String,InputStream> geoPaths, List<Map<String,Object>> grids,String unit) throws IOException {
+                                        Map<String,InputStream> gridPath, List<Map<String,Object>> grids,String unit) throws IOException {
         final double startTime = System.nanoTime();
 
         String[] split1 = point1.split(",");
@@ -560,7 +553,7 @@ public class HybridPathService {
             vertexpoi2.setY(Double.parseDouble(split2[1]));
             vertexpoi2.setZ(Double.parseDouble(split2[2]));
 
-            GridPathService gridPathService = new GridPathService(stairGrids,geoPaths,grids);
+            GridPathService gridPathService = new GridPathService(stairGrids,gridPath,grids);
 
             gridPathService.setGridPath(vertexpoi1, vertexpoi2, unit);
             List<vertexpoi> gridPathOverFloor = gridPathService.getGridPathOverFloor();
