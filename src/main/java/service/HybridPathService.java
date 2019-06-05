@@ -173,7 +173,7 @@ public class HybridPathService {
     * @Date: 2019/6/4
     */
 
-    public List<List<Object>> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points) {
+    public List<Object> getShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points) {
         final double startTime = System.nanoTime();
         String proximalPoint = getProximalPoint(point1, point2, points);
         if ("".equals(proximalPoint)) {
@@ -193,7 +193,7 @@ public class HybridPathService {
             statu = 3;
             return null;
         }
-        List<List<Object>> list1 = new ArrayList<>();
+        List<Object> list1 = new ArrayList<>();
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             list1.add(points.get(shortestPath.get(i).toString()));
         }

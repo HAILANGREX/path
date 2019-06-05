@@ -39,7 +39,7 @@ public class Test {
         String point2 = "-6581.30,-1762.60,12000.00";
         String unit = "1mm";
 
-        List<List<Object>> topologyShortest = pathsService.getTopologyShortest(point1, point2, edgeList, pointMap);
+        List<Object> topologyShortest = pathsService.getTopologyShortest(point1, point2, edgeList, pointMap);
         System.out.println(topologyShortest);
 
         List<Object> hybridShortest = pathsService.getHybridShortest(point1, point2, edgeList, pointMap, geoMap, grids, unit);

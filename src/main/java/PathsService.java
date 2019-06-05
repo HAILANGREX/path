@@ -69,8 +69,8 @@ public class PathsService {
     * @Date: 2019/6/3 
     */ 
     
-    public  List<List<Object>> getTopologyShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points){
-        List<List<Object>> vertexpoiList = new ArrayList<>();
+    public  List<Object> getTopologyShortest(String point1, String point2, List<String> relationlist,Map<String,List<Object>> points){
+        List<Object> vertexpoiList = new ArrayList<>();
         HybridPathService hybridPathService = new HybridPathService();
         vertexpoiList=hybridPathService.getShortest(point1, point2, relationlist,points);
         return vertexpoiList;
